@@ -13,11 +13,10 @@ public class User {
     private String username;
     private String password;
     private String email;
-    private String firstName;
-    private String lastName;
+    private String firstname;
+    private String lastname;
     private String phone;
     private String photoURL;
-
     private ArrayList<Task> tasks;
 
     @Inject
@@ -26,13 +25,13 @@ public class User {
     public User() {
     }
 
-    public User(String username, String password, String email, String firstName, String lastName, String phone, String photoURL) {
+    public User(int id, String username, String password, String email, String firstname, String lastname, String phone, String photoURL) {
         this.id = UserBean.generateId();
         this.username = username;
         this.password = password;
         this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.phone = phone;
         this.photoURL = photoURL;
         this.tasks = new ArrayList<Task>();
@@ -46,55 +45,70 @@ public class User {
     public String getUsername() {
         return username;
     }
-    public void setUsername(String username) {
-        this.username = username;
-    }
     @XmlElement
     public String getPassword() {
         return password;
-    }
-    public void setPassword(String password) {
-        this.password = password;
     }
     @XmlElement
     public String getEmail() {
         return email;
     }
-    public void setEmail(String email) {
-        this.email = email;
+    @XmlElement
+    public String getFirstname() {
+        return firstname;
     }
     @XmlElement
-    public String getFirstName() {
-        return firstName;
-    }
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-    @XmlElement
-    public String getLastName() {
-        return lastName;
-    }
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public String getLastname() {
+        return lastname;
     }
     @XmlElement
     public String getPhone() {
         return phone;
     }
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
     @XmlElement
     public String getPhotoURL() {
         return photoURL;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
     public void setPhotoURL(String photoURL) {
         this.photoURL = photoURL;
     }
 
+    public void setTasks(ArrayList<Task> tasks) {
+        this.tasks = tasks;
+    }
+
     @XmlElement
     public ArrayList<Task> getTasks() {
-        return tasks;
+        return this.tasks;
     }
 
     public void addTask(Task t) {
@@ -122,7 +136,6 @@ public class User {
         }
         return null;
     }
-
 
 
 }

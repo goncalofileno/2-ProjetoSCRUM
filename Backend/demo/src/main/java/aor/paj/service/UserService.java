@@ -38,13 +38,16 @@ public class UserService {
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addUser(User u) {
-        if (userBean.userExists(u.getUsername()))
+        if (userBean.userExists(u.getUsername())) {
             return Response.status(406).entity("username").build();
-
-        if (userBean.emailExists(u.getEmail()))
+        }
+        if (userBean.emailExists(u.getEmail())) {
             return Response.status(406).entity("mail").build();
-
-
+        }
+        System.out.println("pedido " + u.getUsername());
+        System.out.println(" ");
+        System.out.println("pedido " + u.getFirstname());
+        System.out.println("pedido " + u.getLastname());
         userBean.addUser(u);
         return Response.status(200).entity("A new user is created").build();
 
@@ -55,10 +58,7 @@ public class UserService {
     @Path("/login")
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(@HeaderParam("username") String username, @HeaderParam("password") String password) {
-        boolean exists = userBean.userExists(username);
-        System.out.println(exists);
-        System.out.println(username);
-        if (!exists) {
+        if (!userBean.userExists(username)) {
             return Response.status(406).entity("username").build();
         } else if (userBean.userPasswordMatch(username, password)) {
             return Response.status(200).entity("done").build();

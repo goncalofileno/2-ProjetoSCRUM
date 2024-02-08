@@ -35,6 +35,8 @@ public class UserBean {
 
     //Add a user to the list of users
     public void addUser(User u) {
+        System.out.println("addUser " + u.getFirstname());
+        System.out.println("addUser " + u.getLastname());
         users.add(u);
         writeIntoJsonFile();
     }
@@ -42,7 +44,6 @@ public class UserBean {
     //Check if the user already exists with the same username
     public boolean userExists(String username) {
         for (User u : users) {
-            System.out.println(u.getUsername());
             if (u.getUsername().equals(username)) {
                 return true;
             }
