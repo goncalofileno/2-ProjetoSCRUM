@@ -8,12 +8,16 @@ import java.io.FileNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import aor.paj.dto.User;
 import aor.paj.dto.Task;
+import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbConfig;
 
 @ApplicationScoped
 public class UserBean {
+
+    @Inject
+    SessionBean sessionBean;
 
     final String filename = "users.json";
     private ArrayList<User> users;
@@ -42,6 +46,7 @@ public class UserBean {
 
         u.setId(generateId());
         u.setTasks(new ArrayList<>());
+
 
         users.add(u);
         writeIntoJsonFile();
@@ -136,7 +141,8 @@ public class UserBean {
 
         t.setStatus(100);
 
-        users.get(0).getTasks().add(t);
+        sessionBean.getUserLogged().getTasks().add(t);
+
         writeIntoJsonFile();
     }
 

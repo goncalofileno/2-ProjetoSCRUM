@@ -1,10 +1,11 @@
 package aor.paj.service;
 
 import java.util.List;
+
+import aor.paj.bean.SessionBean;
 import aor.paj.dto.Task;
 
 import aor.paj.bean.UserBean;
-import aor.paj.dto.Application;
 import aor.paj.dto.User;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -26,6 +27,9 @@ public class UserService {
 
     @Inject
     UserBean userBean;
+
+    @Inject
+    SessionBean sessionBean;
 
 
     @GET
@@ -77,6 +81,7 @@ public class UserService {
             return Response.status(406).entity("username").build();
         } else if (userBean.userPasswordMatch(username, password)) {
 
+            sessionBean.setUserLogged(userBean.getUser(username));
             return Response.status(200).entity("done").build();
         } else {
             return Response.status(406).entity("password").build();
