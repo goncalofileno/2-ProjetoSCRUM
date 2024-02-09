@@ -1,10 +1,10 @@
 package aor.paj.dto;
 
-import aor.paj.bean.UserBean;
+
 import jakarta.inject.Inject;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
 import java.util.ArrayList;
 
 @XmlRootElement
@@ -17,16 +17,16 @@ public class User {
     private String lastname;
     private String phone;
     private String photoURL;
+    @XmlElement
+    @XmlElementWrapper
     private ArrayList<Task> tasks;
 
-    @Inject
-    UserBean UserBean;
 
     public User() {
     }
 
-    public User(int id, String username, String password, String email, String firstname, String lastname, String phone, String photoURL) {
-        this.id = UserBean.generateId();
+    // Construtor para adicionar um novo usuário, sem fornecer um ID
+    public User(String username, String password, String email, String firstname, String lastname, String phone, String photoURL) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -34,40 +34,52 @@ public class User {
         this.lastname = lastname;
         this.phone = phone;
         this.photoURL = photoURL;
-        this.tasks = new ArrayList<Task>();
     }
 
     @XmlElement
     public int getId() {
         return id;
     }
+
     @XmlElement
     public String getUsername() {
         return username;
     }
+
     @XmlElement
     public String getPassword() {
         return password;
     }
+
     @XmlElement
     public String getEmail() {
         return email;
     }
+
     @XmlElement
     public String getFirstname() {
         return firstname;
     }
+
     @XmlElement
     public String getLastname() {
         return lastname;
     }
+
     @XmlElement
     public String getPhone() {
         return phone;
     }
+
     @XmlElement
     public String getPhotoURL() {
         return photoURL;
+    }
+
+    @XmlElementWrapper
+    @XmlElement(name = "task")
+    public ArrayList<Task> getTasks() {
+        return this.tasks;
     }
 
     public void setId(int id) {
@@ -106,11 +118,6 @@ public class User {
         this.tasks = tasks;
     }
 
-    @XmlElement
-    public ArrayList<Task> getTasks() {
-        return this.tasks;
-    }
-
     public void addTask(Task t) {
         tasks.add(t);
     }
@@ -136,6 +143,4 @@ public class User {
         }
         return null;
     }
-
-
 }

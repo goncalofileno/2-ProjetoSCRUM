@@ -1,6 +1,7 @@
 package aor.paj.service;
 
 import java.util.List;
+import aor.paj.dto.Task;
 
 import aor.paj.bean.UserBean;
 import aor.paj.dto.Application;
@@ -50,7 +51,21 @@ public class UserService {
         System.out.println("pedido " + u.getLastname());
         userBean.addUser(u);
         return Response.status(200).entity("A new user is created").build();
+    }
 
+    //ADD TASK TO USER
+    @PUT
+    @Path("/addTask")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addUserTask(Task t) {
+        System.out.println("pedido addtask titulo - " + t.getTitle());
+        System.out.println("pedido addtask descricao - " + t.getDescription());
+        System.out.println("pedido addtask prioridade - " + t.getPriority());
+        System.out.println("pedido addtask data inicial - " + t.getInitialDate());
+        System.out.println("pedido addtask data final - " + t.getFinalDate());
+
+        userBean.addUserTask(t);
+        return Response.status(200).entity("Task is added").build();
     }
 
     //LOGIN FUNCTION
@@ -61,11 +76,13 @@ public class UserService {
         if (!userBean.userExists(username)) {
             return Response.status(406).entity("username").build();
         } else if (userBean.userPasswordMatch(username, password)) {
+
             return Response.status(200).entity("done").build();
         } else {
             return Response.status(406).entity("password").build();
         }
     }
+
 
     @GET
     @Path("/{id}")

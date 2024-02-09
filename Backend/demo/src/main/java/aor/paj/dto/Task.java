@@ -5,40 +5,39 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import aor.paj.bean.TaskBean;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @XmlRootElement
 public class Task {
 
-    @Inject
-    TaskBean TaskBean;
-
     int id;
     String title;
     String description;
-    Date initialDate;
-    Date finalDate;
+
+    LocalDate initialDate;
+    LocalDate finalDate;
     int status;
     int priority;
-    int userId;
 
     public Task() {
     }
 
-    public Task(int i, String t, String d, Date id, Date fd, int s, int p, int u) {
-        this.id = 1;
-        this.title = t;
-        this.description = d;
-        this.initialDate = id;
-        this.finalDate = fd;
-        this.status = s;
-        this.priority = p;
-        this.userId = u;
+    public Task(String title, String description, LocalDate initialDate, LocalDate finalDate, int priority) {
+        this.title = title;
+        this.description= description;
+        this.initialDate = initialDate;
+        this.finalDate = finalDate;
+        this.priority = priority;
     }
 
     @XmlElement
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     @XmlElement
@@ -60,20 +59,20 @@ public class Task {
     }
 
     @XmlElement
-    public Date getInitialDate() {
+    public LocalDate getInitialDate() {
         return initialDate;
     }
 
-    public void setInitialDate(Date initialDate) {
+    public void setInitialDate(LocalDate initialDate) {
         this.initialDate = initialDate;
     }
 
     @XmlElement
-    public Date getFinalDate() {
+    public LocalDate getFinalDate() {
         return finalDate;
     }
 
-    public void setFinalDate(Date finalDate) {
+    public void setFinalDate(LocalDate finalDate) {
         this.finalDate = finalDate;
     }
 
@@ -93,14 +92,5 @@ public class Task {
 
     public void setPriority(int priority) {
         this.priority = priority;
-    }
-
-    @XmlElement
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
     }
 }

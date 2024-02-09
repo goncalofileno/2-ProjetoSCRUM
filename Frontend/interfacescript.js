@@ -161,15 +161,23 @@ doneSection.addEventListener("dragover", function (event) {
 
 //Listener para quando o botão de adicionar uma nova tarefa é clicado
 submitTaskButton.addEventListener("click", function () {
-  const titulo = document.getElementById("taskTitle").value;
-  const descricao = document.getElementById("taskDescription").value;
-  const priority = document.getElementById("editTaskPriority").value;
-  const initialDate = document.getElementById("initialDate").value;
-  const finalDate = document.getElementById("finalDate").value;
+  let title = document.getElementById("taskTitle").value;
+  let description = document.getElementById("taskDescription").value;
+  let priority = document.getElementById("editTaskPriority").value;
+  let initialDate = document.getElementById("initialDate").value;
+  let finalDate = document.getElementById("finalDate").value;
+
+  if (priority === "low") {
+    priority = 100;
+  } else if (priority === "medium") {
+    priority = 200;
+  } else {
+    priority = 300;
+  }
 
   if (
-    titulo === "" ||
-    descricao === "" ||
+    title === "" ||
+    description === "" ||
     priority === "" ||
     initialDate === "" ||
     finalDate === ""
@@ -181,26 +189,26 @@ submitTaskButton.addEventListener("click", function () {
   } else if (new Date(finalDate) < new Date(initialDate)) {
     alert("The final date must be after the initial date");
   } else {
-    const newTask = {
-      titulo: titulo,
-      descricao: descricao,
-      prioridade: priority,
-      dataInicial: initialDate,
-      dataFinal: finalDate,
-      user: localStorage.getItem("username"),
+    let newTask = {
+      title: title,
+      description: description,
+      priority: priority,
+      initialDate: initialDate,
+      finalDate: finalDate,
     };
 
     console.log(newTask);
+
     async function addTask(newTask) {
-      await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/add", {
-        method: "POST",
+      await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/addTask", {
+        method: "PUT",
         headers: {
           Accept: "*/*",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(newTask),
       }).then((response) => {
-        if (response.ok) {
+        if (response.status === 200) {
           alert("Task is added successfully :)");
         } else {
           return response.text(); // read the response body as text
@@ -208,11 +216,14 @@ submitTaskButton.addEventListener("click", function () {
       });
     }
 
-    displayTasks();
-
-    newTaskModal.style.display = "none";
-    document.body.classList.remove("modal-open");
+    addTask(newTask);
   }
+
+
+  displayTasks();
+
+  newTaskModal.style.display = "none";
+  document.body.classList.remove("modal-open");
 });
 
 //Listener para quando o botão de "Yes" do deleteWarning modal é clicado

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import aor.paj.dto.User;
+import aor.paj.dto.Task;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbConfig;
@@ -35,8 +36,13 @@ public class UserBean {
 
     //Add a user to the list of users
     public void addUser(User u) {
+
         System.out.println("addUser " + u.getFirstname());
         System.out.println("addUser " + u.getLastname());
+
+        u.setId(generateId());
+        u.setTasks(new ArrayList<>());
+
         users.add(u);
         writeIntoJsonFile();
     }
@@ -71,14 +77,23 @@ public class UserBean {
         return false;
     }
 
-    //function to generate a integer id for the user, checking if the id already exists
     public int generateId() {
-        int id = 0;
-        for (User user : users) {
-            if (user.getId() == id) {
-                id++;
+        // Inicializa o ID como 1
+        int id = 1;
+        boolean idAlreadyExists;
+        // Verifica se o ID já existe na lista de usuários
+        do {
+            idAlreadyExists = false;
+            for (User user : users) {
+                if (user.getId() == id) {
+                    // Se o ID já existe, incrementa o ID e redefine a flag para true
+                    id++;
+                    idAlreadyExists = true;
+                    break;
+                }
             }
-        }
+        } while (idAlreadyExists); // Continua até encontrar um ID único
+
         return id;
     }
 
@@ -99,6 +114,7 @@ public class UserBean {
         return null;
     }
 
+   //Return the list of users in the json file
     public ArrayList<User> getUsers() {
         return users;
     }
@@ -112,6 +128,37 @@ public class UserBean {
         }
         return false;
     }
+
+    //add task to the first user in the list of users
+    public void addUserTask(Task t) {
+
+        t.setId(generateTaskId());
+
+        t.setStatus(100);
+
+        users.get(0).getTasks().add(t);
+        writeIntoJsonFile();
+    }
+
+    //generate a unique id for tasks checking if the id already exists
+    public int generateTaskId() {
+        int id = 1;
+        boolean idAlreadyExists;
+        do {
+            idAlreadyExists = false;
+            for (User user : users) {
+                for (Task task : user.getTasks()) {
+                    if (task.getId() == id) {
+                        id++;
+                        idAlreadyExists = true;
+                        break;
+                    }
+                }
+            }
+        } while (idAlreadyExists);
+        return id;
+    }
+
 
     private void writeIntoJsonFile() {
         try {
