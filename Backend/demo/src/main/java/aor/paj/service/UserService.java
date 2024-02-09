@@ -31,7 +31,7 @@ public class UserService {
     @Inject
     SessionBean sessionBean;
 
-
+    //Service that sends the list of all users
     @GET
     @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
@@ -39,6 +39,7 @@ public class UserService {
         return userBean.getUsers();
     }
 
+    //Service that receives a user object and adds it to the list of users
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -57,7 +58,7 @@ public class UserService {
         return Response.status(200).entity("A new user is created").build();
     }
 
-    //ADD TASK TO USER
+    //Service that receives a task object and adds it to the list of tasks of the user that is logged
     @PUT
     @Path("/addTask")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -72,7 +73,21 @@ public class UserService {
         return Response.status(200).entity("Task is added").build();
     }
 
-    //LOGIN FUNCTION
+    //Service that receives a task id and status number and updates the task status
+    @PUT
+    @Path("/updateTaskStatus")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateTask(@QueryParam("id") int id, @QueryParam("status") int status) {
+        if(sessionBean.getUserLogged() == null){
+            return Response.status(406).entity("User is not logged").build();
+        } else if(userBean.updateTaskStatus(sessionBean.getUserLogged().getId(), id, status)){
+            return Response.status(200).entity("Task is updated").build();
+        } else {
+            return Response.status(406).entity("Task is not found").build();
+        }
+    }
+
+    //Service that manages the login of the user
     @POST
     @Path("/login")
     @Produces(MediaType.APPLICATION_JSON)
@@ -88,7 +103,19 @@ public class UserService {
         }
     }
 
+    //Service that sends the list of tasks of the user that is logged
+    @GET
+    @Path("/tasks")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTasks() {
+        if (sessionBean.getUserLogged() == null) {
+            return Response.status(406).entity("User is not logged").build();
+        } else {
+            return Response.status(200).entity(sessionBean.getUserLogged().getTasks()).build();
+        }
+    }
 
+    //Service 
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -107,6 +134,20 @@ public class UserService {
     public Response removeUser(@QueryParam("id") int id) {
         userBean.removeUser(id);
         return Response.status(200).entity("User is deleted").build();
+    }
+
+    //Service that receives a task id and deletes the whole task from the user that is logged
+    @DELETE
+    @Path("/deleteTask")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response removeTask(@QueryParam("id") int id) {
+        if(sessionBean.getUserLogged() == null){
+            return Response.status(406).entity("User is not logged").build();
+        } else if(userBean.removeTask(sessionBean.getUserLogged().getId(), id)){
+            return Response.status(200).entity("Task is deleted").build();
+        } else {
+            return Response.status(406).entity("Task is not found").build();
+        }
     }
 
 }

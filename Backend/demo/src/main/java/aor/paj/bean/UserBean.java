@@ -165,6 +165,37 @@ public class UserBean {
         return id;
     }
 
+    //Receives the id of the user and the id of the task and removes the task from the user
+    public boolean removeTask(int userId, int taskId) {
+        for (User u : users) {
+            if (u.getId() == userId) {
+                for (Task t : u.getTasks()) {
+                    if (t.getId() == taskId) {
+                        u.getTasks().remove(t);
+                        writeIntoJsonFile();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean updateTaskStatus(int userId, int taskId, int status) {
+        for (User u : users) {
+            if (u.getId() == userId) {
+                for (Task t : u.getTasks()) {
+                    if (t.getId() == taskId) {
+                        t.setStatus(status);
+                        writeIntoJsonFile();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     private void writeIntoJsonFile() {
         try {

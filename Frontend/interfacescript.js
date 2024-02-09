@@ -70,11 +70,13 @@ const botaoLogout = document.getElementById("logoutButton");
 const dateTimeDisplay = document.getElementById("dateTimeDisplay");
 
 const editProfileButton = document.getElementById("editProfileButton");
+const taskInitialDateinfo = document.getElementById("taskInitialDateinfo");
+const taskFinalDateinfo = document.getElementById("taskFinalDateinfo");
 
 //Permite que uma tarefa seja largada sobre as secções
-todoSection.addEventListener("drop", drop);
-doingSection.addEventListener("drop", drop);
-doneSection.addEventListener("drop", drop);
+/*todoSection.addEventListener("drop", drop);*/
+//doingSection.addEventListener("drop", drop);
+//doneSection.addEventListener("drop", drop);
 
 //Listener para quando se clica na em qualquer sitio da página
 window.addEventListener("click", function (event) {
@@ -160,7 +162,7 @@ doneSection.addEventListener("dragover", function (event) {
 });
 
 //Listener para quando o botão de adicionar uma nova tarefa é clicado
-submitTaskButton.addEventListener("click", function () {
+submitTaskButton.addEventListener("click", async function () {
   let title = document.getElementById("taskTitle").value;
   let description = document.getElementById("taskDescription").value;
   let priority = document.getElementById("editTaskPriority").value;
@@ -216,43 +218,33 @@ submitTaskButton.addEventListener("click", function () {
       });
     }
 
-    addTask(newTask);
+   await addTask(newTask);
   }
 
-
-  displayTasks();
+  await displayTasks();
+  console.log("Tasks are printed");
 
   newTaskModal.style.display = "none";
   document.body.classList.remove("modal-open");
 });
 
 //Listener para quando o botão de "Yes" do deleteWarning modal é clicado
-yesButton.addEventListener("click", function () {
+yesButton.addEventListener("click", async function () {
   //Obtem o identificador da tarefa que foi guardado no atributo data-task-id do deleteWarning modal
   const taskId = deleteWarning.getAttribute("data-task-id");
 
-  //Percorre as 3 listas de tarefas para encontrar o index da tarefa que foi largada e guarda a taskList onde a tarefa se encontra
-  let taskIndex = ToDoTasks.findIndex((task) => task.identificador == taskId);
-  let taskList = ToDoTasks;
-  //findIndex retorna -1 se não encontrar a tarefa na lista
-  if (taskIndex === -1) {
-    taskIndex = DoingTasks.findIndex((task) => task.identificador == taskId);
-    taskList = DoingTasks;
-    if (taskIndex === -1) {
-      taskIndex = DoneTasks.findIndex((task) => task.identificador == taskId);
-      taskList = DoneTasks;
-    }
-  }
-  //Remove a tarefa da lista onde se encontrava
-  taskList.splice(taskIndex, 1); // Remove the task from its current list
+  // Make a DELETE request to the server
+  const response = await fetch(`http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/deleteTask?id=${taskId}`, {
+    method: 'DELETE',
+  });
 
-  //Guarda as 3 listas de tarefas na localStorage
-  localStorage.setItem("ToDoTasks", JSON.stringify(ToDoTasks));
-  localStorage.setItem("DoingTasks", JSON.stringify(DoingTasks));
-  localStorage.setItem("DoneTasks", JSON.stringify(DoneTasks));
+  if (!response.ok) {
+    alert('Failed to delete task');
+    return;
+  }
 
   //Chama a função para mostrar as tarefas
-  displayTasks();
+  await displayTasks();
 
   //Esconde o deleteWarning modal e remove o escurecimento do fundo da página
   deleteWarning.style.display = "none";
@@ -316,58 +308,46 @@ function allowDrop(event) {
   event.preventDefault();
 }
 
-//Função que define o que acontece quando uma tarefa é largada sobre um determinado elemento
-function drop(event) {
-  //Evita o comportamento padrão do browser
-  event.preventDefault();
+async function drop(event) {
 
-  //Obtem o identificador da tarefa que foi largada sobre o elemento e guarda-o na variável taskId
+  console.log("drop event");
+  // Prevent default behavior
+  event.preventDefault();
+  event.stopPropagation();
+
+  // Get the task ID that was dropped onto the section
   const taskId = event.dataTransfer.getData("text/plain");
 
-  //Obtem o elemento div da tarefa através do identificador da tarefa
-  const taskElement = document.getElementById(taskId);
-
-  //Obtem a secção onde a tarefa foi largada
+  // Get the target section where the task was dropped
   let targetSection = event.target;
 
-  //Se a taskElement e a targetSection existirem
-  if (taskElement && targetSection) {
-    //Adiciona a tarefa à secção onde foi largada
-    targetSection.appendChild(taskElement);
-
-    //Percorre as 3 listas de tarefas para encontrar o index da tarefa que foi largada e guarda a taskList onde a tarefa se encontra
-    let taskIndex = ToDoTasks.findIndex((task) => task.identificador == taskId);
-    let taskList = ToDoTasks;
-    //findIndex retorna -1 se não encontrar a tarefa na lista
-    if (taskIndex === -1) {
-      taskIndex = DoingTasks.findIndex((task) => task.identificador == taskId);
-      taskList = DoingTasks;
-      if (taskIndex === -1) {
-        taskIndex = DoneTasks.findIndex((task) => task.identificador == taskId);
-        taskList = DoneTasks;
-      }
-    }
-
-    //Remove a tarefa da lista onde se encontrava
-    const task = taskList.splice(taskIndex, 1)[0];
-
-    //Através da secção onde a tarefa foi largada, adiciona a tarefa à lista correspondente
-    if (targetSection.id === "todo") {
-      ToDoTasks.push(task);
-    } else if (targetSection.id === "doing") {
-      DoingTasks.push(task);
-    } else if (targetSection.id === "done") {
-      DoneTasks.push(task);
-    }
-
-    //Guarda as 3 listas de tarefas na localStorage
-    localStorage.setItem("ToDoTasks", JSON.stringify(ToDoTasks));
-    localStorage.setItem("DoingTasks", JSON.stringify(DoingTasks));
-    localStorage.setItem("DoneTasks", JSON.stringify(DoneTasks));
-
-    //Volta a chamar a função para mostrar as tarefas
-    displayTasks();
+  // Determine the new status based on the target section
+  let newStatus;
+  if (targetSection.id === "todo") {
+    newStatus = 100;
+  } else if (targetSection.id === "doing") {
+    newStatus = 200;
+  } else if (targetSection.id === "done") {
+    newStatus = 300;
+  } else {
+    alert('Invalid drop target');
+    return;
   }
+
+  // Make a PUT request to update the task status
+  const response = await fetch(`http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/updateTaskStatus?id=${taskId}&status=${newStatus}`, {
+    method: 'PUT',
+  });
+
+  if (!response.ok) {
+    alert('Failed to update task status');
+    return;
+  } else {
+    await displayTasks();
+  }
+
+  // Call displayTasks() to update the task lists
+  
 }
 
 //Função que gera um id único para uma tarefa
@@ -385,11 +365,22 @@ function generateUniqueID() {
 }
 
 //Função que imprime as tarefas nas secções correspondentes
-function displayTasks() {
+async function displayTasks() {
+  
   //Limpa todas as secções de tarefas
   todoSection.innerHTML = "";
   doingSection.innerHTML = "";
   doneSection.innerHTML = "";
+
+  // Fetch tasks from the server
+  const response = await fetch(
+    "http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/tasks", { cache: "no-store"}
+  );
+  if (!response.ok) {
+    alert("Failed to fetch tasks");
+    return;
+  }
+  const tasks = await response.json();
 
   //Função que cria um elemento para uma tarefa na secção correspondente
   function createTaskElement(task) {
@@ -400,10 +391,10 @@ function displayTasks() {
     //Cria um elemento div para o titulo da tarefa para que o mesmo possa ser estilizado
     const titleContainer = document.createElement("div");
     titleContainer.classList.add("title");
-    titleContainer.textContent = task.titulo;
+    titleContainer.textContent = task.title;
     taskElement.appendChild(titleContainer);
     //Atribui o id ao elemento div pelo identificador da tarefa
-    taskElement.id = task.identificador;
+    taskElement.id = task.id;
     //Define que o elemento div é arrastável
     taskElement.draggable = true;
 
@@ -412,14 +403,14 @@ function displayTasks() {
     priorityIcon.classList.add("priority-icon");
 
     //Define o icon da prioridade de acordo com a prioridade da tarefa
-    switch (task.prioridade) {
-      case "low":
+    switch (task.priority) {
+      case 100:
         priorityIcon.src = "resources/Icons/low_priority.png";
         break;
-      case "medium":
+      case 200:
         priorityIcon.src = "resources/Icons/medium_priority.png";
         break;
-      case "high":
+      case 300:
         priorityIcon.src = "resources/Icons/high_priority.png";
         break;
       default:
@@ -443,8 +434,11 @@ function displayTasks() {
     //Adiciona um listener para quando o elemento div é clicado duas vezes
     taskElement.addEventListener("dblclick", function () {
       //Coloca no modal os detalhes da tarefa o titulo e a descrição
-      modalTaskTitle.textContent = task.titulo;
-      modalTaskDescription.textContent = task.descricao;
+      modalTaskTitle.textContent = task.title;
+      modalTaskDescription.textContent = task.description;
+      taskInitialDateinfo.textContent = task.initialDate;
+      taskFinalDateinfo.textContent = task.finalDate;
+
 
       //Mostra o modal escurecendo o fundo da página
       taskDetailsModal.style.display = "block";
@@ -461,29 +455,7 @@ function displayTasks() {
       contextMenu.style.left = `${e.pageX}px`;
 
       //Guarda o identificador e a prioridade da tarefa
-      contextMenu.setAttribute("data-task-id", task.identificador);
-
-      //Variável para guardar o nome da secção onde a tarefa se encontra
-      let sectionName;
-
-      //Verifica onde se encontra a tarefa através do identificador da tarefa e guarda-a na variável taskToEdit
-      const taskToEdit =
-        ToDoTasks.find((t) => t.identificador === task.identificador) ||
-        DoingTasks.find((t) => t.identificador === task.identificador) ||
-        DoneTasks.find((t) => t.identificador === task.identificador);
-
-      //Verifica onde se encontra a tarefa e guarda o nome da secção na variável sectionName
-      if (ToDoTasks.includes(taskToEdit)) {
-        sectionName = "ToDo";
-      } else if (DoingTasks.includes(taskToEdit)) {
-        sectionName = "Doing";
-      } else if (DoneTasks.includes(taskToEdit)) {
-        sectionName = "Done";
-      }
-
-      //Grava a tarefa e o nome da secção onde se encontra na sessionStorage
-      sessionStorage.setItem("taskToEdit", JSON.stringify(taskToEdit));
-      sessionStorage.setItem("sectionName", sectionName);
+      contextMenu.setAttribute("data-task-id", task.id);
 
       //Mostra o popup menu
       contextMenu.style.display = "block";
@@ -493,19 +465,25 @@ function displayTasks() {
   }
 
   //Adiciona as tarefas à secção ToDo
-  ToDoTasks.forEach((task) => {
-    todoSection.appendChild(createTaskElement(task));
-  });
+  tasks
+    .filter((task) => task.status === 100)
+    .forEach((task) => {
+      todoSection.appendChild(createTaskElement(task));
+    });
 
   //Adiciona as tarefas à secção Doing
-  DoingTasks.forEach((task) => {
-    doingSection.appendChild(createTaskElement(task));
-  });
+  tasks
+    .filter((task) => task.status === 200)
+    .forEach((task) => {
+      doingSection.appendChild(createTaskElement(task));
+    });
 
   //Adiciona as tarefas à secção Done
-  DoneTasks.forEach((task) => {
-    doneSection.appendChild(createTaskElement(task));
-  });
+  tasks
+    .filter((task) => task.status === 300)
+    .forEach((task) => {
+      doneSection.appendChild(createTaskElement(task));
+    });
 }
 
 //Função que mostra a data e hora
