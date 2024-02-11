@@ -7,45 +7,6 @@ document
     let username = document.getElementById("username").value;
     let password = document.getElementById("password").value;
 
-    console.log(username);  
-    console.log(password);
-
-    async function loginUser(username, password) {
-      await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/login", {
-        method: "POST",
-        headers: {
-          Accept: "*/*",
-          "Content-Type": "application/json",
-          "username": username,
-          "password": password
-        },
-        credentials: 'include',
-      })
-      .then((response) => {
-        if (response.ok) {
-          return response.text(); // read the response body as text
-        } else {
-          return response.text(); // read the response body as text
-        }
-      })
-      .then((data) => {
-        if (data == "done") {
-          // Store the username in localStorage
-          localStorage.setItem("username", username);
-          // Redirect to the interface page
-          window.location.href = "interface.html";
-        } else if (data == "username") {
-          alert("username does not exist :(");
-        } else if (data == "password") {
-          alert("wrong password :(");
-        } else {
-          console.log(data);
-        }
-      })
-      .catch((error) => {
-        console.error("There was a problem with the fetch operation:", error);
-      });
-    }
     loginUser(username, password);
   });
 
@@ -56,3 +17,26 @@ document
     //Redireciona para a página de registro
     window.location.href = "register.html";
   });
+
+  function loginUser(username, password) {
+    localStorage.removeItem("username");
+    localStorage.removeItem("password");
+    fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/login", {
+      method: "POST",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        username: username,
+        password: password,
+      },
+      credentials: "include",
+    }).then(async (response) => {
+      if (response.status == 200) {
+        localStorage.setItem("username", username);
+        localStorage.setItem("password", password);
+        window.location.href = "interface.html";
+      } else {
+        alert("Invalid Credentials");
+      }
+    });
+  }

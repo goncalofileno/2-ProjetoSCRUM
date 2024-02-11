@@ -16,9 +16,6 @@ import jakarta.json.bind.JsonbConfig;
 @ApplicationScoped
 public class UserBean {
 
-    @Inject
-    SessionBean sessionBean;
-
     final String filename = "users.json";
     private ArrayList<User> users;
 
@@ -134,18 +131,6 @@ public class UserBean {
         return false;
     }
 
-    //add task to the first user in the list of users
-    public void addUserTask(Task t) {
-
-        t.setId(generateTaskId());
-
-        t.setStatus(100);
-
-        sessionBean.getUserLogged().getTasks().add(t);
-
-        writeIntoJsonFile();
-    }
-
     //generate a unique id for tasks checking if the id already exists
     public int generateTaskId() {
         int id = 1;
@@ -165,10 +150,10 @@ public class UserBean {
         return id;
     }
 
-    //Receives the id of the user and the id of the task and removes the task from the user
-    public boolean removeTask(int userId, int taskId) {
+    //Receives the username and task id and removes the task from the user
+    public boolean removeTask(String username, int taskId) {
         for (User u : users) {
-            if (u.getId() == userId) {
+            if (u.getUsername().equals(username)) {
                 for (Task t : u.getTasks()) {
                     if (t.getId() == taskId) {
                         u.getTasks().remove(t);
@@ -181,9 +166,11 @@ public class UserBean {
         return false;
     }
 
-    public boolean updateTaskStatus(int userId, int taskId, int status) {
+
+    //Receives the username, task id and new status and updates the status of the task
+    public boolean updateTaskStatus(String username, int taskId, int status) {
         for (User u : users) {
-            if (u.getId() == userId) {
+            if (u.getUsername().equals(username)) {
                 for (Task t : u.getTasks()) {
                     if (t.getId() == taskId) {
                         t.setStatus(status);
@@ -191,6 +178,34 @@ public class UserBean {
                         return true;
                     }
                 }
+            }
+        }
+        return false;
+    }
+
+    //Receives the username and task id and sees if task belongs to the user
+    public boolean taskBelongsToUser(String username, int taskId) {
+        for (User u : users) {
+            if (u.getUsername().equals(username)) {
+                for (Task t : u.getTasks()) {
+                    if (t.getId() == taskId) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    //Receives the username and task object and adds the task to the user
+    public boolean addTask(String username, Task task) {
+        for (User u : users) {
+            if (u.getUsername().equals(username)) {
+                task.setId(generateTaskId());
+                task.setStatus(100);
+                u.getTasks().add(task);
+                writeIntoJsonFile();
+                return true;
             }
         }
         return false;

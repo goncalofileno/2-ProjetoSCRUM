@@ -163,6 +163,7 @@ doneSection.addEventListener("dragover", function (event) {
 
 //Listener para quando o botão de adicionar uma nova tarefa é clicado
 submitTaskButton.addEventListener("click", async function () {
+
   let title = document.getElementById("taskTitle").value;
   let description = document.getElementById("taskDescription").value;
   let priority = document.getElementById("editTaskPriority").value;
@@ -191,6 +192,7 @@ submitTaskButton.addEventListener("click", async function () {
   } else if (new Date(finalDate) < new Date(initialDate)) {
     alert("The final date must be after the initial date");
   } else {
+    
     let newTask = {
       title: title,
       description: description,
@@ -201,24 +203,7 @@ submitTaskButton.addEventListener("click", async function () {
 
     console.log(newTask);
 
-    async function addTask(newTask) {
-      await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/addTask", {
-        method: "PUT",
-        headers: {
-          Accept: "*/*",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newTask),
-      }).then((response) => {
-        if (response.status === 200) {
-          alert("Task is added successfully :)");
-        } else {
-          return response.text(); // read the response body as text
-        }
-      });
-    }
-
-   await addTask(newTask);
+    await addTask(newTask);
   }
 
   await displayTasks();
@@ -234,12 +219,21 @@ yesButton.addEventListener("click", async function () {
   const taskId = deleteWarning.getAttribute("data-task-id");
 
   // Make a DELETE request to the server
-  const response = await fetch(`http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/deleteTask?id=${taskId}`, {
-    method: 'DELETE',
-  });
+  const response = await fetch(
+    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/deleteTask?id=${taskId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password"),
+      },
+    }
+  );
 
   if (!response.ok) {
-    alert('Failed to delete task');
+    alert("Failed to delete task");
     return;
   }
 
@@ -309,7 +303,6 @@ function allowDrop(event) {
 }
 
 async function drop(event) {
-
   console.log("drop event");
   // Prevent default behavior
   event.preventDefault();
@@ -330,24 +323,32 @@ async function drop(event) {
   } else if (targetSection.id === "done") {
     newStatus = 300;
   } else {
-    alert('Invalid drop target');
+    alert("Invalid drop target");
     return;
   }
 
   // Make a PUT request to update the task status
-  const response = await fetch(`http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/updateTaskStatus?id=${taskId}&status=${newStatus}`, {
-    method: 'PUT',
-  });
+  const response = await fetch(
+    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/updateTaskStatus?id=${taskId}&status=${newStatus}`,
+    {
+      method: "PUT",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password"),
+      },
+    }
+  );
 
   if (!response.ok) {
-    alert('Failed to update task status');
+    alert("Failed to update task status");
     return;
   } else {
     await displayTasks();
   }
 
   // Call displayTasks() to update the task lists
-  
 }
 
 //Função que gera um id único para uma tarefa
@@ -366,7 +367,6 @@ function generateUniqueID() {
 
 //Função que imprime as tarefas nas secções correspondentes
 async function displayTasks() {
-  
   //Limpa todas as secções de tarefas
   todoSection.innerHTML = "";
   doingSection.innerHTML = "";
@@ -374,7 +374,16 @@ async function displayTasks() {
 
   // Fetch tasks from the server
   const response = await fetch(
-    "http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/tasks", { cache: "no-store"}
+    "http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/tasks",
+    {
+      method: "GET",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password"),
+      },
+    }
   );
   if (!response.ok) {
     alert("Failed to fetch tasks");
@@ -438,7 +447,6 @@ async function displayTasks() {
       modalTaskDescription.textContent = task.description;
       taskInitialDateinfo.textContent = task.initialDate;
       taskFinalDateinfo.textContent = task.finalDate;
-
 
       //Mostra o modal escurecendo o fundo da página
       taskDetailsModal.style.display = "block";
@@ -505,4 +513,25 @@ function displayDateTime() {
 
   // Atualiza o conteúdo do elemento
   dateTimeDisplay.textContent = dateTimeString;
+}
+
+async function addTask(task) {
+  console.log("add task username: ", localStorage.getItem("username"));
+  console.log("add task password: ", localStorage.getItem("password"));
+  await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/addTask", {
+    method: "POST",
+    headers: {
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      username: localStorage.getItem("username"),
+      password: localStorage.getItem("password"),
+    },
+    body: JSON.stringify(task),
+  }).then((response) => {
+    if (response.status === 200) {
+      alert("Task is added successfully :)");
+    } else {
+      return response.text(); // read the response body as text
+    }
+  });
 }
