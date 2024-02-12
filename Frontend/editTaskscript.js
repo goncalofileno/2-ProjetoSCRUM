@@ -10,8 +10,7 @@ window.onload = function () {
   document.getElementById("editarTarefaTitulo").value = task.titulo;
   document.getElementById("editarTarefaDescricao").value = task.descricao;
   document.getElementById("editTaskPriority").value = task.prioridade;
-  document.getElementById("editTaskStatus").value =
-    sessionStorage.getItem("sectionName");
+  document.getElementById("editTaskStatus").value = sessionStorage.getItem("sectionName");
   //Mostra o modal de edição e escurece o fundo
   document.getElementById("editTaskModal").style.display = "block";
   document.body.classList.add("modal-open");
@@ -70,7 +69,9 @@ cancelEditButton.addEventListener("click", function () {
 guardaEditarTarefaButton.addEventListener("click", function () {
   //Obtem os valores dos campos que podem ser editados
   const editedTitulo = document.getElementById("editarTarefaTitulo").value;
-  const editedDescricao = document.getElementById("editarTarefaDescricao").value;
+  const editedDescricao = document.getElementById(
+    "editarTarefaDescricao"
+  ).value;
   const selectedSectionName = document.getElementById("editTaskStatus").value;
   const selectedPriority = document.getElementById("editTaskPriority").value;
 

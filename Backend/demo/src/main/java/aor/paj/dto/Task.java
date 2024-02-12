@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import aor.paj.bean.TaskBean;
+import java.time.format.DateTimeParseException;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -11,19 +12,21 @@ import java.util.Date;
 @XmlRootElement
 public class Task {
 
-    int id;
-    String title;
-    String description;
+    private int id;
+    private String title;
+    private String description;
 
-    LocalDate initialDate;
-    LocalDate finalDate;
-    int status;
-    int priority;
+    private LocalDate initialDate;
+    private LocalDate finalDate;
+    private Integer status;
+    private Integer priority;
 
     public Task() {
+
     }
 
     public Task(String title, String description, LocalDate initialDate, LocalDate finalDate, int priority) {
+        System.out.println("Construtor chamado com parâmetros");
         this.title = title;
         this.description= description;
         this.initialDate = initialDate;
@@ -63,8 +66,15 @@ public class Task {
         return initialDate;
     }
 
-    public void setInitialDate(LocalDate initialDate) {
-        this.initialDate = initialDate;
+    public void setInitialDate(String initialDate) {
+        try {
+            this.initialDate = LocalDate.parse(initialDate);
+        } catch (DateTimeParseException e) {
+            // Handle the parsing exception
+            // For example, set a default value or throw a custom exception
+            // For demonstration, setting initialDate to null
+            this.initialDate = null;
+        }
     }
 
     @XmlElement
@@ -72,12 +82,16 @@ public class Task {
         return finalDate;
     }
 
-    public void setFinalDate(LocalDate finalDate) {
-        this.finalDate = finalDate;
+    public void setFinalDate(String finalDate) {
+        try {
+            this.finalDate = LocalDate.parse(finalDate);
+        } catch (DateTimeParseException e) {
+            this.finalDate = null;
+        }
     }
 
     @XmlElement
-    public int getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
@@ -86,11 +100,32 @@ public class Task {
     }
 
     @XmlElement
-    public int getPriority() {
+    public Integer getPriority() {
         return priority;
     }
 
-    public void setPriority(int priority) {
-        this.priority = priority;
+    public void setPriority(String priority) {
+        try {
+            // Attempt to parse the priority string to an integer
+            this.priority = Integer.parseInt(priority);
+        } catch (Exception e) {
+            // Handle the error appropriately
+            // For example, you can log the error and set a default priority value
+            System.err.println("Error parsing priority: " + e.getMessage());
+            this.priority = 0; // Set a default priority value or handle the error in another way
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", initialDate=" + initialDate +
+                ", finalDate=" + finalDate +
+                ", status=" + status +
+                ", priority=" + priority +
+                '}';
     }
 }

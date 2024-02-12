@@ -1,11 +1,19 @@
 //Listener para quando todas as acções de quando a página carrega
-window.onload = function () {
-  //Obtém o username da sessionStorage
-  const username = localStorage.getItem("username");
+window.onload = async function () {
+
+  await getUser();
+
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const firstname = user.firstname;
   //Vai buscar o elemento que mostra o username
-  let labelUsername = document.getElementById("displayUsername");
+  const labelUsername = document.getElementById("displayUsername");
   //Coloca o username no elemento
-  labelUsername.textContent = username;
+  labelUsername.textContent = firstname;
+
+  // Get the photoURL from the user and set it as the src of the userIcon element
+  const photoURL = user.photoURL;
+  const userIcon = document.getElementById("userIcon");
+  userIcon.src = photoURL;
 
   displayDateTime(); // Adiciona a exibição da data e hora
   setInterval(displayDateTime, 1000); // Atualiza a cada segundo
@@ -126,6 +134,12 @@ trashIcon.ondrop = function (event) {
 
 //Listener para quando o botão de logout é clicado
 botaoLogout.addEventListener("click", function () {
+
+  //Remove o username e a password da localStorage
+  localStorage.removeItem("username");
+  localStorage.removeItem("password");
+
+
   //Redireciona para a página de login
   window.location.href = "index.html";
 });
@@ -135,6 +149,27 @@ addTaskButton.addEventListener("click", function () {
   //Limpas os campos de input da modal
   document.getElementById("taskTitle").value = "";
   document.getElementById("taskDescription").value = "";
+
+  // Get today's date
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  const yyyy = today.getFullYear();
+
+  // Format today's date
+  const formattedToday = yyyy + '-' + mm + '-' + dd;
+
+  // Get the date inputs
+  const initialDateInput = document.getElementById('initialDate');
+  const finalDateInput = document.getElementById('finalDate');
+
+  // Set the min attribute of the initialDate input to today's date
+  initialDateInput.setAttribute('min', formattedToday);
+
+  // Update the min attribute of the finalDate input when the initialDate changes
+  initialDateInput.addEventListener('change', function() {
+    finalDateInput.setAttribute('min', this.value);
+  });
 
   //Mostra a modal
   newTaskModal.style.display = "block";
@@ -220,7 +255,7 @@ yesButton.addEventListener("click", async function () {
 
   // Make a DELETE request to the server
   const response = await fetch(
-    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/deleteTask?id=${taskId}`,
+    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/delete?id=${taskId}`,
     {
       method: "DELETE",
       headers: {
@@ -329,7 +364,7 @@ async function drop(event) {
 
   // Make a PUT request to update the task status
   const response = await fetch(
-    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/updateTaskStatus?id=${taskId}&status=${newStatus}`,
+    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/updateStatus?id=${taskId}&status=${newStatus}`,
     {
       method: "PUT",
       headers: {
@@ -374,7 +409,7 @@ async function displayTasks() {
 
   // Fetch tasks from the server
   const response = await fetch(
-    "http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/tasks",
+    "http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/all",
     {
       method: "GET",
       headers: {
@@ -390,6 +425,21 @@ async function displayTasks() {
     return;
   }
   const tasks = await response.json();
+
+  tasks.sort((a, b) => {
+    // Sort by priority first
+    if (a.priority !== b.priority) {
+      return b.priority - a.priority;
+    }
+  
+    // If priority is the same, sort by initialDate
+    if (a.initialDate !== b.initialDate) {
+      return new Date(a.initialDate) - new Date(b.initialDate);
+    }
+  
+    // If initialDate is also the same, sort by finalDate
+    return new Date(a.finalDate) - new Date(b.finalDate);
+  });
 
   //Função que cria um elemento para uma tarefa na secção correspondente
   function createTaskElement(task) {
@@ -518,7 +568,7 @@ function displayDateTime() {
 async function addTask(task) {
   console.log("add task username: ", localStorage.getItem("username"));
   console.log("add task password: ", localStorage.getItem("password"));
-  await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/addTask", {
+  await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/add", {
     method: "POST",
     headers: {
       Accept: "*/*",
@@ -535,3 +585,27 @@ async function addTask(task) {
     }
   });
 }
+
+async function getUser() {
+  const response = await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/get", {
+    method: "GET",
+    headers: {
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      username: localStorage.getItem("username"),
+      password: localStorage.getItem("password"),
+    },
+  });
+
+  if (!response.ok) {
+    alert("Failed to fetch user");
+    return;
+  }
+
+  const user = await response.json();
+  console.log(user);
+
+  // Store the user in the session storage
+  sessionStorage.setItem("user", JSON.stringify(user));
+}
+

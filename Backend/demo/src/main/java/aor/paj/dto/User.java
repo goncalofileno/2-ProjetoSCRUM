@@ -13,13 +13,16 @@ public class User {
     private int id;
     private String username;
     private String password;
+    private String oldpassword;
+    private String newpassword;
+    private String confirmnewpassword;
     private String email;
     private String firstname;
     private String lastname;
     private String phone;
     private String photoURL;
-    @XmlElement
-    @XmlElementWrapper
+    //@XmlElement
+    //@XmlElementWrapper
     private ArrayList<Task> tasks;
 
 
@@ -53,6 +56,21 @@ public class User {
     }
 
     @XmlElement
+    public String getOldpassword() {
+        return oldpassword;
+    }
+
+    @XmlElement
+    public String getNewpassword() {
+        return newpassword;
+    }
+
+    @XmlElement
+    public String getConfirmnewpassword() {
+        return confirmnewpassword;
+    }
+
+    @XmlElement
     public String getEmail() {
         return email;
     }
@@ -83,6 +101,7 @@ public class User {
         return this.tasks;
     }
 
+
     public void setId(int id) {
         this.id = id;
     }
@@ -93,6 +112,18 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setNewpassword(String newpassword) {
+        this.newpassword = newpassword;
+    }
+
+    public void setConfirmnewpassword(String confirmnewpassword) {
+        this.confirmnewpassword = confirmnewpassword;
+    }
+
+    public void setOldpassword(String oldpassword) {
+        this.oldpassword = oldpassword;
     }
 
     public void setEmail(String email) {

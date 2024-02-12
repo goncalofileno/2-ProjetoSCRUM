@@ -176,6 +176,12 @@ footer a {
   right: 5.8rem;
   font-weight: bold;
 }
+
+#labelWelcome{
+  position: fixed;
+  top: 2.5rem;
+  right: 7rem;
+}
 /*label "welcome"*/
 #labelUser {
   position: relative;
@@ -192,18 +198,20 @@ footer a {
   max-width: 80%; /* Limita a largura para evitar sobreposição */
   display: inline-block; /* Permite que o elemento tenha uma largura máxima */
 }
+
 /*avatar do usuário*/
 #userIcon {
   position: fixed;
   top: 0.5rem;
   right: 1rem;
   width: 5rem;
-  height: 3.2rem;
+  height: 5rem;
+  border-radius: 50%;
 }
 /*botão de logout*/
 #logoutButton {
   position: absolute;
-  top: 1.5rem;
+  top: 3rem;
   right: -3.9rem;
   margin-top: 0%;
   background-color: transparent;
@@ -220,7 +228,7 @@ footer a {
 
 #editProfileButton{
   position: absolute;
-  top: 3.5rem;
+  top: 5.5rem;
   right: -3.9rem;
   margin-top: 0%;
   background-color: transparent;

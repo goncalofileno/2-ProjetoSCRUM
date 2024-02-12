@@ -1,38 +1,17 @@
 package aor.paj.bean;
 
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.util.ArrayList;
-import java.io.File;
-import java.io.FileNotFoundException;
+import aor.paj.utils.JsonUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import aor.paj.dto.User;
 import aor.paj.dto.Task;
-import jakarta.inject.Inject;
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
-import jakarta.json.bind.JsonbConfig;
 
 @ApplicationScoped
 public class UserBean {
-
-    final String filename = "users.json";
     private ArrayList<User> users;
 
     public UserBean() {
-
-        File f = new File(filename);
-        if (f.exists()) {
-            try {
-                FileReader filereader = new FileReader(f);
-                users = JsonbBuilder.create().fromJson(filereader, new ArrayList<User>() {
-                }.getClass().getGenericSuperclass());
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            users = new ArrayList<User>();
-        }
+        this.users = JsonUtils.getUsers();
     }
 
     //Add a user to the list of users
@@ -43,40 +22,12 @@ public class UserBean {
 
         u.setId(generateId());
         u.setTasks(new ArrayList<>());
-
+        u.setOldpassword("");
+        u.setNewpassword("");
+        u.setConfirmnewpassword("");
 
         users.add(u);
-        writeIntoJsonFile();
-    }
-
-    //Check if the user already exists with the same username
-    public boolean userExists(String username) {
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    //Check if the user already exists with the same email
-    public boolean emailExists(String email) {
-        for (User u : users) {
-            if (u.getEmail().equals(email)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    //Checks if the user and password match
-    public boolean userPasswordMatch(String username, String password) {
-        for (User u : users) {
-            if (u.getUsername().equals(username) && u.getPassword().equals(password)) {
-                return true;
-            }
-        }
-        return false;
+        JsonUtils.writeIntoJsonFile(users);
     }
 
     public int generateId() {
@@ -118,7 +69,34 @@ public class UserBean {
 
    //Return the list of users in the json file
     public ArrayList<User> getUsers() {
+        users = JsonUtils.getUsers();
         return users;
+    }
+
+    //Update a user to the list of users
+    public void updateUser(User u) {
+        System.out.println("Updating a user...");
+        User found = getUser(u.getUsername());
+
+        updateUserFields(found,u);
+
+        JsonUtils.writeIntoJsonFile(users);
+    }
+
+    //Update the user Fields with the ones coming from the edit User Form, in case they aren't empty
+    public void updateUserFields(User found,User u) {
+        if (!u.getNewpassword().isEmpty())
+            found.setPassword(u.getNewpassword());
+        if (!u.getEmail().isEmpty())
+            found.setEmail(u.getEmail());
+        if (!u.getFirstname().isEmpty())
+            found.setFirstname(u.getFirstname());
+        if (!u.getLastname().isEmpty())
+            found.setLastname(u.getLastname());
+        if (!u.getPhone().isEmpty())
+            found.setPhone(u.getPhone());
+        if (!u.getPhotoURL().isEmpty())
+            found.setPhotoURL(u.getPhotoURL());
     }
 
     public boolean removeUser(int id) {
@@ -130,97 +108,4 @@ public class UserBean {
         }
         return false;
     }
-
-    //generate a unique id for tasks checking if the id already exists
-    public int generateTaskId() {
-        int id = 1;
-        boolean idAlreadyExists;
-        do {
-            idAlreadyExists = false;
-            for (User user : users) {
-                for (Task task : user.getTasks()) {
-                    if (task.getId() == id) {
-                        id++;
-                        idAlreadyExists = true;
-                        break;
-                    }
-                }
-            }
-        } while (idAlreadyExists);
-        return id;
-    }
-
-    //Receives the username and task id and removes the task from the user
-    public boolean removeTask(String username, int taskId) {
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                for (Task t : u.getTasks()) {
-                    if (t.getId() == taskId) {
-                        u.getTasks().remove(t);
-                        writeIntoJsonFile();
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-
-    //Receives the username, task id and new status and updates the status of the task
-    public boolean updateTaskStatus(String username, int taskId, int status) {
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                for (Task t : u.getTasks()) {
-                    if (t.getId() == taskId) {
-                        t.setStatus(status);
-                        writeIntoJsonFile();
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    //Receives the username and task id and sees if task belongs to the user
-    public boolean taskBelongsToUser(String username, int taskId) {
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                for (Task t : u.getTasks()) {
-                    if (t.getId() == taskId) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    //Receives the username and task object and adds the task to the user
-    public boolean addTask(String username, Task task) {
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                task.setId(generateTaskId());
-                task.setStatus(100);
-                u.getTasks().add(task);
-                writeIntoJsonFile();
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    private void writeIntoJsonFile() {
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(filename);
-            JsonbConfig config = new JsonbConfig().withFormatting(true);
-            Jsonb jsonb = JsonbBuilder.create(config);
-            jsonb.toJson(users, fileOutputStream);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

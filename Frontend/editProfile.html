@@ -6,11 +6,17 @@
 </head>
 <body>
     <h2>Edit Profile Page</h2>
-    <form>
+    <form id="editProfileForm">
         <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username" readonly><br>
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password"><br>
+        <input type="text" id="username" name="username" readonly disabled="disabled"><br>
+        
+        <label for="oldpassword">Old Password:</label><br>
+        <input type="password" id="oldpassword" name="oldpassword"><br>
+        <label for="newpassword">New Password:</label><br>
+        <input type="password" id="newpassword" name="newpassword"><br>
+        <label for="confirmnewpassword">Confirm New Password:</label><br>
+        <input type="password" id="confirmnewpassword" name="confirmnewpassword"><br>
+        
         <label for="email">Email:</label><br>
         <input type="email" id="email" name="email"><br>
         <label for="firstname">First name:</label><br>
@@ -21,7 +27,7 @@
         <input type="tel" id="phone" name="phone"><br>
         <label for="photo">Photo URL:</label><br>
         <input type="url" id="photo" name="photo"><br>
-        <input type="submit" value="Registrar">
+        <input type="submit" id="saveChanges" value="Save Changes">
         <button type="button" id="cancelButton">Cancel</button>
     </form>
     <script src="editProfile.js"></script>

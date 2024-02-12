@@ -34,7 +34,7 @@ document
     //window.location.href = "index.html";
   });
 
-  async function addUser() {;
+  async function addUser(user) {
 
     await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/add", {
       method: "POST",
