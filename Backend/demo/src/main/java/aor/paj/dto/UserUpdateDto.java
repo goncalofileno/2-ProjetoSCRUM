@@ -17,7 +17,6 @@ public class UserUpdateDto {
     }
 
     // Getters and setters
-
     @XmlElement
     public String getUsername() {
         return username;

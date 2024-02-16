@@ -44,6 +44,7 @@ public class UserService {
         }
     }
 
+    //Service that receives a username and sends the user object withouth the password
     @GET
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -127,6 +128,7 @@ public class UserService {
         return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
     }
 
+    //Service that receives username and password and sends the user object without the password
     @GET
     @Path("/getDetails")
     @Produces(MediaType.APPLICATION_JSON)
@@ -147,6 +149,7 @@ public class UserService {
         }
     }
 
+    //Service that only sends the first name of user and photo for the header
     @GET
     @Path("/getPartial")
     @Produces(MediaType.APPLICATION_JSON)

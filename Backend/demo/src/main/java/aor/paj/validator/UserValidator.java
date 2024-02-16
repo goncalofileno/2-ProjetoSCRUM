@@ -15,6 +15,7 @@ public class UserValidator {
     private static final String PHONE_REGEX = "^[+\\d\\s()-]*$";
     private static final String URL_REGEX = "^(http|https)://.*$";
 
+    //function that authenticates the user
     public static boolean isValidUser(List<UserDto> userDtos, String username, String password) {
         return userExists(userDtos, username) && userPasswordMatch(userDtos, username, password);
     }
@@ -70,22 +71,26 @@ public class UserValidator {
         return matcher.matches();
     }
 
+    //Function that verifys if user to add is null or blank
     public static boolean isNullorBlank(UserDto u) {
         return isNullOrBlank(u.getUsername()) || isNullOrBlank(u.getPassword()) || isNullOrBlank(u.getEmail())
                 || isNullOrBlank(u.getFirstname()) || isNullOrBlank(u.getLastname())
                 || isNullOrBlank(u.getPhone()) || isNullOrBlank(u.getPhotoURL());
     }
 
+    //Function that verifys if user to update is null or blank
     public static boolean isNullorBlank(UserUpdateDto u) {
         return isNullOrBlank(u.getUsername()) || isNullOrBlank(u.getEmail())
                 || isNullOrBlank(u.getFirstname()) || isNullOrBlank(u.getLastname())
                 || isNullOrBlank(u.getPhone()) || isNullOrBlank(u.getPhotoURL());
     }
 
+    //Function that verifys if user to update password is null or blank
     public static boolean isNullorBlank(UserPasswordUpdateDto u) {
         return isNullOrBlank(u.getOldPassword()) || isNullOrBlank(u.getNewPassword());
     }
 
+    // Helper method to check if a string is null or blank
     public static boolean isNullOrBlank(String s) {
         return s == null || s.isBlank();
     }

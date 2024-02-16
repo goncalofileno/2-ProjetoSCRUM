@@ -20,11 +20,10 @@ public class TaskDto {
     private Integer priority;
 
     public TaskDto() {
-        System.out.println("Construtor chamado sem parâmetros");
+
     }
 
     public TaskDto(String title, String description, LocalDate initialDate, LocalDate finalDate, int priority) {
-        System.out.println("Construtor chamado com parâmetros");
         this.title = title;
         this.description = description;
         this.initialDate = initialDate;
@@ -102,7 +101,6 @@ public class TaskDto {
 
 
     public void setStatus(Integer status) {
-
         if (status == null) {
             this.status = 0; // or any default value
         } else {
@@ -125,24 +123,20 @@ public class TaskDto {
 
 
     public void setPriority(Integer priority) {
-        System.out.println("Setter chamado com parâmetros Integer");
         if (priority == null) {
-            this.priority = 0; // or any default value
+            this.priority = 0;
         } else {
             this.priority = priority;
         }
     }
 
     public void setPriority(String priority) {
-        System.out.println("Setter chamado com parâmetros String");
         try {
             this.priority = Integer.parseInt(priority);
         } catch (NumberFormatException e) {
-            this.priority = 0; // or any default value
+            this.priority = 0;
         }
     }
-    // other fields and methods...
-
 
     @Override
     public String toString() {

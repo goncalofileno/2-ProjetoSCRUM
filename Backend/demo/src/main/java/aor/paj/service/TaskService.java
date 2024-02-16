@@ -25,30 +25,44 @@ public class TaskService {
 
     @Inject
     TaskBean taskBean;
+
     //Service that receives a task object and adds it to the list of tasks of the user that is logged
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response addUserTask(@HeaderParam("username") String username, @HeaderParam("password") String password, TaskDto t) {
-        try {
-            if (UserValidator.isValidUser(taskBean.getUsers(), username, password)) {
-                if (TaskValidator.isValidTask(t)) {
-                    taskBean.addTask(username, t);
-                    return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Task is added"))).build();
-                } else {
-                    return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid task"))).build();
-                }
+        if (UserValidator.isValidUser(taskBean.getUsers(), username, password)) {
+            if (TaskValidator.isValidTask(t)) {
+                taskBean.addTask(username, t);
+                return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Task is added"))).build();
             } else {
-                if (username == null || password == null) {
-                    return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
-                } else {
-                    return Response.status(403).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid Credentials"))).build();
-                }
+                return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid task"))).build();
             }
-        } catch (JsonbException e) {
-            // Handle JSON deserialization error
-            return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Error parsing JSON: " + e.getMessage()))).build();
+        } else {
+            if (username == null || password == null) {
+                return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+            } else {
+                return Response.status(403).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid Credentials"))).build();
+            }
+        }
+    }
+
+    //Service that receives a task and its id and updates the task
+    @PUT
+    @Path("/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateTask(@HeaderParam("username") String username, @HeaderParam("password") String password, @QueryParam("id") int id, TaskDto t) {
+        if (UserValidator.isValidUser(taskBean.getUsers(), username, password) && taskBean.taskBelongsToUser(username, id)) {
+            if (TaskValidator.isValidTaskEdit(t)) {
+                taskBean.updateTask(id, t);
+                return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Task is updated"))).build();
+            } else {
+                return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid task"))).build();
+            }
+        } else {
+            return getResponse(username, password, id);
         }
     }
 
@@ -106,29 +120,11 @@ public class TaskService {
         }
     }
 
-    //Service that receives a task and its id and updates the task
-    @PUT
-    @Path("/update")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response updateTask(@HeaderParam("username") String username, @HeaderParam("password") String password, @QueryParam("id") int id, TaskDto t) {
-        if (UserValidator.isValidUser(taskBean.getUsers(), username, password) && taskBean.taskBelongsToUser(username, id)) {
-            if (TaskValidator.isValidTaskEdit(t)) {
-                taskBean.updateTask(id, t);
-                return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Task is updated"))).build();
-            } else {
-                return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid task"))).build();
-            }
-        } else {
-            return getResponse(username, password, id);
-        }
-    }
-
-
+    //Function to handle the response of some services
     public Response getResponse(@HeaderParam("username") String username, @HeaderParam("password") String password, @QueryParam("id") int id) {
         if (username == null || password == null) {
             return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
-        }else if(!UserValidator.isValidUser(taskBean.getUsers(), username, password)){
+        } else if (!UserValidator.isValidUser(taskBean.getUsers(), username, password)) {
             return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid Credentials"))).build();
         } else if (!taskBean.taskBelongsToUser(username, id)) {
             return Response.status(403).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Forbidden"))).build();
@@ -136,7 +132,4 @@ public class TaskService {
             return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid status"))).build();
         }
     }
-
-
-
 }

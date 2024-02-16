@@ -455,90 +455,6 @@ async function displayTasks() {
     return new Date(a.finalDate) - new Date(b.finalDate);
   });
 
-  //Função que cria um elemento para uma tarefa na secção correspondente
-  function createTaskElement(task) {
-    //Cria um elemento div para a tarefa
-    const taskElement = document.createElement("div");
-    taskElement.classList.add("task-element");
-
-    //Cria um elemento div para o titulo da tarefa para que o mesmo possa ser estilizado
-    const titleContainer = document.createElement("div");
-    titleContainer.classList.add("title");
-    titleContainer.textContent = task.title;
-    taskElement.appendChild(titleContainer);
-    //Atribui o id ao elemento div pelo identificador da tarefa
-    taskElement.id = task.id;
-    //Define que o elemento div é arrastável
-    taskElement.draggable = true;
-
-    //Cria um elemento img para o icon da prioridade
-    const priorityIcon = document.createElement("img");
-    priorityIcon.classList.add("priority-icon");
-
-    //Define o icon da prioridade de acordo com a prioridade da tarefa
-    switch (task.priority) {
-      case 100:
-        priorityIcon.src = "resources/Icons/low_priority.png";
-        break;
-      case 200:
-        priorityIcon.src = "resources/Icons/medium_priority.png";
-        break;
-      case 300:
-        priorityIcon.src = "resources/Icons/high_priority.png";
-        break;
-      default:
-        break;
-    }
-
-    //Adiciona o icon da prioridade ao elemento div
-    taskElement.appendChild(priorityIcon);
-
-    //Define que a informação do elemento arrastável é o id da tarefa
-    taskElement.addEventListener("dragstart", function (event) {
-      event.dataTransfer.setData("text/plain", event.target.id);
-      trashIcon.classList.add("show");
-    });
-
-    //Define que o icon do lixo é escondido quando o elemento arrastável é largado
-    taskElement.addEventListener("dragend", function (e) {
-      trashIcon.classList.remove("show");
-    });
-
-    //Adiciona um listener para quando o elemento div é clicado duas vezes
-    taskElement.addEventListener("dblclick", function () {
-      //Coloca no modal os detalhes da tarefa o titulo e a descrição
-      modalTaskTitle.textContent = task.title;
-      modalTaskDescription.textContent = task.description;
-      taskInitialDateinfo.textContent = task.initialDate;
-      taskFinalDateinfo.textContent = task.finalDate;
-
-      //Mostra o modal escurecendo o fundo da página
-      taskDetailsModal.style.display = "block";
-      document.body.classList.add("modal-open");
-    });
-
-    //Adiciona um listener para quando o elemento div é clicado com o botão direito
-    taskElement.addEventListener("contextmenu", (e) => {
-      //Previnir o comportamento padrão do browser
-      e.preventDefault();
-
-      //Estiliza o popup menu para aparecer onde o cursor é clicado com o botão direito
-      contextMenu.style.top = `${e.pageY}px`;
-      contextMenu.style.left = `${e.pageX}px`;
-
-      //Guarda o identificador e a prioridade da tarefa
-      contextMenu.setAttribute("data-task-id", task.id);
-
-      //Guarda o identificador da tarefa no sessionStorage
-      sessionStorage.setItem("taskID", task.id);
-
-      //Mostra o popup menu
-      contextMenu.style.display = "block";
-    });
-    //Retorna o elemento div
-    return taskElement;
-  }
-
   //Adiciona as tarefas à secção ToDo
   tasks
     .filter((task) => task.status === 100)
@@ -559,6 +475,90 @@ async function displayTasks() {
     .forEach((task) => {
       doneSection.appendChild(createTaskElement(task));
     });
+}
+
+//Função que cria um elemento para uma tarefa na secção correspondente
+function createTaskElement(task) {
+  //Cria um elemento div para a tarefa
+  const taskElement = document.createElement("div");
+  taskElement.classList.add("task-element");
+
+  //Cria um elemento div para o titulo da tarefa para que o mesmo possa ser estilizado
+  const titleContainer = document.createElement("div");
+  titleContainer.classList.add("title");
+  titleContainer.textContent = task.title;
+  taskElement.appendChild(titleContainer);
+  //Atribui o id ao elemento div pelo identificador da tarefa
+  taskElement.id = task.id;
+  //Define que o elemento div é arrastável
+  taskElement.draggable = true;
+
+  //Cria um elemento img para o icon da prioridade
+  const priorityIcon = document.createElement("img");
+  priorityIcon.classList.add("priority-icon");
+
+  //Define o icon da prioridade de acordo com a prioridade da tarefa
+  switch (task.priority) {
+    case 100:
+      priorityIcon.src = "resources/Icons/low_priority.png";
+      break;
+    case 200:
+      priorityIcon.src = "resources/Icons/medium_priority.png";
+      break;
+    case 300:
+      priorityIcon.src = "resources/Icons/high_priority.png";
+      break;
+    default:
+      break;
+  }
+
+  //Adiciona o icon da prioridade ao elemento div
+  taskElement.appendChild(priorityIcon);
+
+  //Define que a informação do elemento arrastável é o id da tarefa
+  taskElement.addEventListener("dragstart", function (event) {
+    event.dataTransfer.setData("text/plain", event.target.id);
+    trashIcon.classList.add("show");
+  });
+
+  //Define que o icon do lixo é escondido quando o elemento arrastável é largado
+  taskElement.addEventListener("dragend", function (e) {
+    trashIcon.classList.remove("show");
+  });
+
+  //Adiciona um listener para quando o elemento div é clicado duas vezes
+  taskElement.addEventListener("dblclick", function () {
+    //Coloca no modal os detalhes da tarefa o titulo e a descrição
+    modalTaskTitle.textContent = task.title;
+    modalTaskDescription.textContent = task.description;
+    taskInitialDateinfo.textContent = task.initialDate;
+    taskFinalDateinfo.textContent = task.finalDate;
+
+    //Mostra o modal escurecendo o fundo da página
+    taskDetailsModal.style.display = "block";
+    document.body.classList.add("modal-open");
+  });
+
+  //Adiciona um listener para quando o elemento div é clicado com o botão direito
+  taskElement.addEventListener("contextmenu", (e) => {
+    //Previnir o comportamento padrão do browser
+    e.preventDefault();
+
+    //Estiliza o popup menu para aparecer onde o cursor é clicado com o botão direito
+    contextMenu.style.top = `${e.pageY}px`;
+    contextMenu.style.left = `${e.pageX}px`;
+
+    //Guarda o identificador e a prioridade da tarefa
+    contextMenu.setAttribute("data-task-id", task.id);
+
+    //Guarda o identificador da tarefa no sessionStorage
+    sessionStorage.setItem("taskID", task.id);
+
+    //Mostra o popup menu
+    contextMenu.style.display = "block";
+  });
+  //Retorna o elemento div
+  return taskElement;
 }
 
 //Função que mostra a data e hora

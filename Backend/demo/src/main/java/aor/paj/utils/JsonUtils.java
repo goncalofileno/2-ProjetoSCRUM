@@ -37,6 +37,7 @@ public class JsonUtils {
         return userDtos;
     }
 
+
     public static void writeIntoJsonFile(List<UserDto> userDtos) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(filename);

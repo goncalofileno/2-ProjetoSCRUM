@@ -23,6 +23,7 @@ public class TaskValidator {
                 t.getInitialDate().isBefore(t.getFinalDate());
     }
 
+    //function that verifys the task to edit
     public static boolean isValidTaskEdit(TaskDto t) {
         System.out.println("Verifica a task a editar");
         return t != null &&
