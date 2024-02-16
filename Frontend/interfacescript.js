@@ -1,17 +1,20 @@
 //Listener para quando todas as acções de quando a página carrega
 window.onload = async function () {
+  if (localStorage.getItem("username") === null) {
+    window.location.href = "index.html";
+  }
 
-  await getUser();
+  await getUserPartial();
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  const firstname = user.firstname;
+  const userPartial = JSON.parse(sessionStorage.getItem("userPartial"));
+  const firstname = userPartial.firstname;
   //Vai buscar o elemento que mostra o username
   const labelUsername = document.getElementById("displayUsername");
   //Coloca o username no elemento
   labelUsername.textContent = firstname;
 
   // Get the photoURL from the user and set it as the src of the userIcon element
-  const photoURL = user.photoURL;
+  const photoURL = userPartial.photourl;
   const userIcon = document.getElementById("userIcon");
   userIcon.src = photoURL;
 
@@ -19,6 +22,11 @@ window.onload = async function () {
   setInterval(displayDateTime, 1000); // Atualiza a cada segundo
   //Chama a função para mostrar as tarefas
   displayTasks();
+};
+
+window.onclose = function () {
+  sessionStorage.clear();
+  localStorage.clear();
 };
 
 //Obtem os trash icon
@@ -134,41 +142,47 @@ trashIcon.ondrop = function (event) {
 
 //Listener para quando o botão de logout é clicado
 botaoLogout.addEventListener("click", function () {
-
-  //Remove o username e a password da localStorage
-  localStorage.removeItem("username");
-  localStorage.removeItem("password");
-
-
-  //Redireciona para a página de login
-  window.location.href = "index.html";
+  logout();
 });
 
 //Listener para quando o botão Add Task é clicado
 addTaskButton.addEventListener("click", function () {
-  //Limpas os campos de input da modal
+  // Clear the input fields of the modal
   document.getElementById("taskTitle").value = "";
   document.getElementById("taskDescription").value = "";
+  document.getElementById("editTaskPriority").value = "low";
+  document.getElementById("initialDate").value = "";
+  document.getElementById("finalDate").value = "";
 
   // Get today's date
   const today = new Date();
-  const dd = String(today.getDate()).padStart(2, '0');
-  const mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
   const yyyy = today.getFullYear();
 
   // Format today's date
-  const formattedToday = yyyy + '-' + mm + '-' + dd;
+  const formattedToday = yyyy + "-" + mm + "-" + dd;
 
   // Get the date inputs
-  const initialDateInput = document.getElementById('initialDate');
-  const finalDateInput = document.getElementById('finalDate');
+  const initialDateInput = document.getElementById("initialDate");
+  const finalDateInput = document.getElementById("finalDate");
 
   // Set the min attribute of the initialDate input to today's date
-  initialDateInput.setAttribute('min', formattedToday);
+  initialDateInput.setAttribute("min", formattedToday);
 
   // Update the min attribute of the finalDate input when the initialDate changes
-  initialDateInput.addEventListener('change', function() {
-    finalDateInput.setAttribute('min', this.value);
+  initialDateInput.addEventListener("change", function () {
+    // Create a new Date object from the initial date
+    let initialDate = new Date(this.value);
+
+    // Add one day to the initial date
+    initialDate.setDate(initialDate.getDate() + 1);
+
+    // Format the new date
+    const nextDay = initialDate.toISOString().split("T")[0];
+
+    // Set the min attribute of the finalDate input to the day after the initial date
+    finalDateInput.setAttribute("min", nextDay);
   });
 
   //Mostra a modal
@@ -198,7 +212,6 @@ doneSection.addEventListener("dragover", function (event) {
 
 //Listener para quando o botão de adicionar uma nova tarefa é clicado
 submitTaskButton.addEventListener("click", async function () {
-
   let title = document.getElementById("taskTitle").value;
   let description = document.getElementById("taskDescription").value;
   let priority = document.getElementById("editTaskPriority").value;
@@ -222,12 +235,12 @@ submitTaskButton.addEventListener("click", async function () {
   ) {
     // Show the warning modal
     warningModal.style.display = "block";
+    warningModal.style.zIndex = "1000"; // Add this line
     // Add the darkening of the page background
     document.getElementById("modalOverlay2").style.display = "block";
   } else if (new Date(finalDate) < new Date(initialDate)) {
     alert("The final date must be after the initial date");
   } else {
-    
     let newTask = {
       title: title,
       description: description,
@@ -239,13 +252,13 @@ submitTaskButton.addEventListener("click", async function () {
     console.log(newTask);
 
     await addTask(newTask);
+    // newTaskModal.style.display = "none"; // Comment this line
   }
 
   await displayTasks();
   console.log("Tasks are printed");
 
-  newTaskModal.style.display = "none";
-  document.body.classList.remove("modal-open");
+  // document.body.classList.remove("modal-open"); // Comment this line
 });
 
 //Listener para quando o botão de "Yes" do deleteWarning modal é clicado
@@ -272,10 +285,10 @@ yesButton.addEventListener("click", async function () {
     return;
   }
 
-  //Chama a função para mostrar as tarefas
+  // Call the function to display the tasks
   await displayTasks();
 
-  //Esconde o deleteWarning modal e remove o escurecimento do fundo da página
+  // Hide the deleteWarning modal and remove the darkening of the page background
   deleteWarning.style.display = "none";
   document.body.classList.remove("modal-open");
 });
@@ -319,7 +332,8 @@ modalOkButton.addEventListener("click", function () {
 });
 
 //Listener para quando o botão de "Ok" do modal de aviso é clicado
-okButton.addEventListener("click", function () {
+okButton.addEventListener("click", function (event) {
+  event.preventDefault();
   //Esconde o modal de aviso e remove o escurecimento do fundo da página
   warningModal.style.display = "none";
   //Remove o escurecimento do fundo da página
@@ -431,12 +445,12 @@ async function displayTasks() {
     if (a.priority !== b.priority) {
       return b.priority - a.priority;
     }
-  
+
     // If priority is the same, sort by initialDate
     if (a.initialDate !== b.initialDate) {
       return new Date(a.initialDate) - new Date(b.initialDate);
     }
-  
+
     // If initialDate is also the same, sort by finalDate
     return new Date(a.finalDate) - new Date(b.finalDate);
   });
@@ -515,6 +529,9 @@ async function displayTasks() {
       //Guarda o identificador e a prioridade da tarefa
       contextMenu.setAttribute("data-task-id", task.id);
 
+      //Guarda o identificador da tarefa no sessionStorage
+      sessionStorage.setItem("taskID", task.id);
+
       //Mostra o popup menu
       contextMenu.style.display = "block";
     });
@@ -586,26 +603,53 @@ async function addTask(task) {
   });
 }
 
-async function getUser() {
-  const response = await fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/get", {
-    method: "GET",
+async function getUserPartial() {
+  const response = await fetch(
+    "http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/getPartial",
+    {
+      method: "GET",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password"),
+      },
+    }
+  );
+
+  if (!response.ok) {
+    alert("Failed to fetch user partial data");
+    return;
+  }
+
+  const userPartial = await response.json();
+  console.log(userPartial);
+
+  // Store the user partial data in the session storage
+  sessionStorage.setItem("userPartial", JSON.stringify(userPartial));
+}
+
+async function logout() {
+  fetch("http://localhost:8080/demo-1.0-SNAPSHOT/rest/user/logout", {
+    method: "POST",
     headers: {
       Accept: "*/*",
       "Content-Type": "application/json",
       username: localStorage.getItem("username"),
       password: localStorage.getItem("password"),
     },
-  });
-
-  if (!response.ok) {
-    alert("Failed to fetch user");
-    return;
-  }
-
-  const user = await response.json();
-  console.log(user);
-
-  // Store the user in the session storage
-  sessionStorage.setItem("user", JSON.stringify(user));
+  })
+    .then((response) => {
+      if (response.ok) {
+        localStorage.clear();
+        sessionStorage.clear();
+        // Replace the current history entry
+        window.history.replaceState(null, null, "index.html");
+        // Reload the page to reflect the changes
+        window.location.reload();
+      } else {
+        alert("Failed to logout");
+      }
+    })
+    .catch((error) => console.error("Error:", error));
 }
-

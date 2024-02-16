@@ -2,6 +2,8 @@ const request = require('supertest');
 
 const faker = require('faker');
 
+const { fa } = require('faker/lib/locales');
+
 
 const apiURL = 'http://localhost:8080/demo-1.0-SNAPSHOT/rest';
 
@@ -30,7 +32,7 @@ describe('Invalid Register', () => {
         .set('Accept', '*/*')
         .set('Content-Type', 'application/json')
         .send({
-          username: 'antonio',
+          username: 'goncalo',
           password: 'antonio',
           email: 'antonio@gmail.com',
           firstname: 'Antonio',
@@ -47,9 +49,9 @@ describe('Invalid Register', () => {
           .set('Accept', '*/*')
           .set('Content-Type', 'application/json')
           .send({
-            username: 'antonio',
+            username: faker.internet.userName(),
             password: 'antonio',
-            email: 'goncalo@gmail.com',
+            email: 'goncalofileno@gmail.com',
             firstname: 'Antonio',
             lastname: 'Maniche',
             phone: '914438462',

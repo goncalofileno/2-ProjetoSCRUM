@@ -1,10 +1,7 @@
 package aor.paj.service;
 
-import java.util.List;
-
 import aor.paj.bean.TaskBean;
-import aor.paj.bean.UserBean;
-import aor.paj.dto.Task;
+import aor.paj.dto.TaskDto;
 import aor.paj.responses.ResponseMessage;
 import aor.paj.utils.JsonUtils;
 import aor.paj.validator.TaskValidator;
@@ -17,7 +14,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -34,7 +30,7 @@ public class TaskService {
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addUserTask(@HeaderParam("username") String username, @HeaderParam("password") String password, Task t) {
+    public Response addUserTask(@HeaderParam("username") String username, @HeaderParam("password") String password, TaskDto t) {
         try {
             if (UserValidator.isValidUser(taskBean.getUsers(), username, password)) {
                 if (TaskValidator.isValidTask(t)) {
@@ -83,6 +79,19 @@ public class TaskService {
         }
     }
 
+    //Service that sends a task object that has the id that is received
+    @GET
+    @Path("/get")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTask(@HeaderParam("username") String username, @HeaderParam("password") String password, @QueryParam("id") int id) {
+        if (UserValidator.isValidUser(taskBean.getUsers(), username, password) && taskBean.taskBelongsToUser(username, id)) {
+            return Response.status(200).entity(taskBean.getTask(username, id)).build();
+        } else {
+            return getResponse(username, password, id);
+        }
+    }
+
     //Service that receives a task id and deletes the whole task from the user that is logged
     @DELETE
     @Path("/delete")
@@ -97,13 +106,34 @@ public class TaskService {
         }
     }
 
+    //Service that receives a task and its id and updates the task
+    @PUT
+    @Path("/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateTask(@HeaderParam("username") String username, @HeaderParam("password") String password, @QueryParam("id") int id, TaskDto t) {
+        if (UserValidator.isValidUser(taskBean.getUsers(), username, password) && taskBean.taskBelongsToUser(username, id)) {
+            if (TaskValidator.isValidTaskEdit(t)) {
+                taskBean.updateTask(id, t);
+                return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Task is updated"))).build();
+            } else {
+                return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid task"))).build();
+            }
+        } else {
+            return getResponse(username, password, id);
+        }
+    }
+
+
     public Response getResponse(@HeaderParam("username") String username, @HeaderParam("password") String password, @QueryParam("id") int id) {
         if (username == null || password == null) {
             return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+        }else if(!UserValidator.isValidUser(taskBean.getUsers(), username, password)){
+            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid Credentials"))).build();
         } else if (!taskBean.taskBelongsToUser(username, id)) {
             return Response.status(403).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Forbidden"))).build();
         } else {
-            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid Credentials"))).build();
+            return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid status"))).build();
         }
     }
 

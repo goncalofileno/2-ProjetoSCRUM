@@ -1,16 +1,67 @@
 //Função chamada cada vez que a página é carregada
-window.onload = function () {
-  const username = localStorage.getItem("username"); //Obtém o nome de utilizador da localStorage
+window.onload = async function () {
+  const userPartial = JSON.parse(sessionStorage.getItem("userPartial"));
+  const firstname = userPartial.firstname;
+  //Vai buscar o elemento que mostra o username
+  const labelUsername = document.getElementById("displayUsername");
+  //Coloca o username no elemento
+  labelUsername.textContent = firstname;
 
-  document.getElementById("displayUsername").textContent = username;
+  // Get the photoURL from the user and set it as the src of the userIcon element
+  const photoURL = userPartial.photourl;
+  const userIcon = document.getElementById("userIcon");
+  userIcon.src = photoURL;
 
-  //Obtém a tarefa a ser editada da sessionStorage
-  const task = JSON.parse(sessionStorage.getItem("taskToEdit"));
+  // Get the task id from session storage
+  const taskId = sessionStorage.getItem("taskID");
+
+  let task;
+
+  await fetch(
+    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/get?id=${taskId}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password"),
+      },
+    }
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      sessionStorage.setItem("taskToEdit", JSON.stringify(data));
+      console.log(data);
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+
+  task = JSON.parse(sessionStorage.getItem("taskToEdit"));
+
   //Preenche os campos do formulário com os detalhes da tarefa a editar
-  document.getElementById("editarTarefaTitulo").value = task.titulo;
-  document.getElementById("editarTarefaDescricao").value = task.descricao;
-  document.getElementById("editTaskPriority").value = task.prioridade;
-  document.getElementById("editTaskStatus").value = sessionStorage.getItem("sectionName");
+  document.getElementById("editarTarefaTitulo").value = task.title;
+  document.getElementById("editarTarefaDescricao").value = task.description;
+  setPriorityAndStatus(task.priority, task.status);
+  document.getElementById("initialDate").value = task.initialDate;
+  document.getElementById("finalDate").value = task.finalDate;
+
+  // Get the initial date input field
+  const initialDateInput = document.getElementById("initialDate");
+
+  // Get the final date input field
+  const finalDateInput = document.getElementById("finalDate");
+
+  initialDateInput.addEventListener("change", function () {
+    finalDateInput.min = this.value;
+
+    // If the new initial date is after the current final date, set the final date to one day after the initial date
+    if (new Date(this.value) > new Date(finalDateInput.value)) {
+      const newFinalDate = new Date(this.value);
+      newFinalDate.setDate(newFinalDate.getDate() + 1);
+      finalDateInput.value = newFinalDate.toISOString().split("T")[0];
+    }
+  });
+
   //Mostra o modal de edição e escurece o fundo
   document.getElementById("editTaskModal").style.display = "block";
   document.body.classList.add("modal-open");
@@ -36,20 +87,6 @@ const cancelaEditarTarefaButton = document.getElementById(
 const modal = document.getElementById("editTaskModal");
 //Obtem o modal de confirmação
 const confirmationModal = document.getElementById("confirmationModal");
-//Obtem a tarefa a ser editada da sessionStorage
-const taskToEdit = JSON.parse(sessionStorage.getItem("taskToEdit"));
-//Guarda os valores originais dos campos que podem ser editados
-const originalTitulo = taskToEdit.titulo;
-const originalDescricao = taskToEdit.descricao;
-const originalPriority = taskToEdit.prioridade;
-const originalSectionName = sessionStorage.getItem("sectionName");
-//Obtem as listas de tarefas da localStorage
-let ToDoTasks = JSON.parse(localStorage.getItem("ToDoTasks")) || [];
-let DoingTasks = JSON.parse(localStorage.getItem("DoingTasks")) || [];
-let DoneTasks = JSON.parse(localStorage.getItem("DoneTasks")) || [];
-
-//Obtem a div que mostra a data e hora
-const dateTimeDisplay = document.getElementById("dateTimeDisplay");
 
 //LISTENERS
 //Adiciona um listener para o botão de cancelar a edição da tarefa
@@ -67,6 +104,17 @@ cancelEditButton.addEventListener("click", function () {
 
 //Adiciona um listener para o botão de guardar a edição da tarefa
 guardaEditarTarefaButton.addEventListener("click", function () {
+  //Obtem a tarefa a ser editada
+  const task = JSON.parse(sessionStorage.getItem("taskToEdit"));
+
+  //Guarda os valores originais dos campos que podem ser editados
+  const originalTitulo = task.title;
+  const originalDescricao = task.description;
+  const originalPriority = setPriorityOriginal(task.priority);
+  const originalSectionName = setStatusOriginal(task.status);
+  const originalInitialDate = task.initialDate;
+  const originalFinalDate = task.finalDate;
+
   //Obtem os valores dos campos que podem ser editados
   const editedTitulo = document.getElementById("editarTarefaTitulo").value;
   const editedDescricao = document.getElementById(
@@ -74,13 +122,17 @@ guardaEditarTarefaButton.addEventListener("click", function () {
   ).value;
   const selectedSectionName = document.getElementById("editTaskStatus").value;
   const selectedPriority = document.getElementById("editTaskPriority").value;
+  const editedInitialDate = document.getElementById("initialDate").value;
+  const editedFinalDate = document.getElementById("finalDate").value;
 
   //Verifica se algum dos campos foi alterado
   if (
     editedTitulo !== originalTitulo ||
     editedDescricao !== originalDescricao ||
     selectedSectionName !== originalSectionName ||
-    selectedPriority !== originalPriority
+    selectedPriority !== originalPriority ||
+    editedInitialDate !== originalInitialDate ||
+    editedFinalDate !== originalFinalDate
   ) {
     //Se algum dos campos foi alterado, mostra o modal de confirmação e escurece o fundo
     const confirmationModal = document.getElementById("confirmationModal");
@@ -97,42 +149,26 @@ confirmEditButton.addEventListener("click", function () {
   ).value;
   const selectedPriority = document.getElementById("editTaskPriority").value;
   const selectedSectionName = document.getElementById("editTaskStatus").value;
+  const editedInitialDate = document.getElementById("initialDate").value;
+  const editedFinalDate = document.getElementById("finalDate").value;
 
-  //Atualiza os valores da tarefa a ser editada
-  taskToEdit.titulo = editedTitulo;
-  taskToEdit.descricao = editedDescricao;
-  taskToEdit.prioridade = selectedPriority;
+  //Cria um objeto com os valores dos campos que podem ser editados
+  let task = {
+    title: editedTitulo,
+    description: editedDescricao,
+    priority: setIntPriority(selectedPriority),
+    status: setIntStatus(selectedSectionName),
+    initialDate: editedInitialDate,
+    finalDate: editedFinalDate,
+  };
 
-  //Remove a tarefa da secção original
-  if (originalSectionName === "ToDo") {
-    ToDoTasks = ToDoTasks.filter(
-      (t) => t.identificador !== taskToEdit.identificador
-    );
-  } else if (originalSectionName === "Doing") {
-    DoingTasks = DoingTasks.filter(
-      (t) => t.identificador !== taskToEdit.identificador
-    );
-  } else if (originalSectionName === "Done") {
-    DoneTasks = DoneTasks.filter(
-      (t) => t.identificador !== taskToEdit.identificador
-    );
-  }
-  //Adiciona a tarefa à secção selecionada
-  if (selectedSectionName === "ToDo") {
-    ToDoTasks.push(taskToEdit);
-  } else if (selectedSectionName === "Doing") {
-    DoingTasks.push(taskToEdit);
-  } else if (selectedSectionName === "Done") {
-    DoneTasks.push(taskToEdit);
-  }
+  let taskId = sessionStorage.getItem("taskID");
 
-  //Atualiza as listas de tarefas na localStorage com as edições feitas
-  localStorage.setItem("ToDoTasks", JSON.stringify(ToDoTasks));
-  localStorage.setItem("DoingTasks", JSON.stringify(DoingTasks));
-  localStorage.setItem("DoneTasks", JSON.stringify(DoneTasks));
+  updateTask(task, taskId);
 
   //Redireciona para interface.html
   window.location.href = "interface.html";
+  //window.location.reload();
 });
 // Função para exibir a data e hora atuais
 function displayDateTime() {
@@ -153,4 +189,158 @@ function displayDateTime() {
 
   // Atualiza o conteúdo do elemento
   dateTimeDisplay.textContent = dateTimeString;
+}
+
+//Função que recebe como int a prioridade e status, faz a conversão para string e coloca no campo correspondente
+function setPriorityAndStatus(priority, status) {
+  let priorityString;
+  let statusString;
+  switch (priority) {
+    case 100:
+      priorityString = "low";
+      break;
+    case 200:
+      priorityString = "medium";
+      break;
+    case 300:
+      priorityString = "high";
+      break;
+  }
+  switch (status) {
+    case 100:
+      statusString = "ToDo";
+      break;
+    case 200:
+      statusString = "Doing";
+      break;
+    case 300:
+      statusString = "Done";
+      break;
+  }
+  document.getElementById("editTaskPriority").value = priorityString;
+  document.getElementById("editTaskStatus").value = statusString;
+}
+
+//Função que recebe como int a prioridade e status, faz a conversão para string e coloca no campo correspondente
+function setPriorityOriginal(priority) {
+  let priorityString;
+  switch (priority) {
+    case 100:
+      priorityString = "low";
+      break;
+    case 200:
+      priorityString = "medium";
+      break;
+    case 300:
+      priorityString = "high";
+      break;
+  }
+  return priorityString;
+}
+
+function setStatusOriginal(status) {
+  let statusString;
+  switch (status) {
+    case 100:
+      statusString = "ToDo";
+      break;
+    case 200:
+      statusString = "Doing";
+      break;
+    case 300:
+      statusString = "Done";
+      break;
+  }
+  return statusString;
+}
+
+function setIntPriority(priority) {
+  let intPriority;
+  switch (priority) {
+    case "low":
+      intPriority = 100;
+      break;
+    case "medium":
+      intPriority = 200;
+      break;
+    case "high":
+      intPriority = 300;
+      break;
+  }
+  return intPriority;
+}
+
+function setIntStatus(status) {
+  let intStatus;
+  switch (status) {
+    case "ToDo":
+      intStatus = 100;
+      break;
+    case "Doing":
+      intStatus = 200;
+      break;
+    case "Done":
+      intStatus = 300;
+      break;
+  }
+  return intStatus;
+}
+
+//Função que mostra a data e hora
+function displayDateTime() {
+  const currentDate = new Date();
+
+  //Formata a data e hora
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZoneName: "short",
+  };
+  const dateTimeString = currentDate.toLocaleDateString("en-US", options);
+
+  const dateTimeDisplay = document.getElementById("dateTimeDisplay");
+
+  // Atualiza o conteúdo do elemento
+  dateTimeDisplay.textContent = dateTimeString;
+}
+
+function updateTask(task, taskId) {
+  fetch(
+    `http://localhost:8080/demo-1.0-SNAPSHOT/rest/task/update?id=${taskId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password"),
+      },
+      body: JSON.stringify(task),
+    }
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      if (response.status === 200) {
+        alert("Task is updated");
+      } else if (response.status === 400) {
+        alert("Invalid task");
+      } else if (response.status === 401) {
+        if (data.message === "Unauthorized") {
+          alert("Unauthorized");
+        } else {
+          alert("Invalid Credentials");
+        }
+      } else if (response.status === 403) {
+        alert("Forbidden");
+      } else {
+        alert("Invalid status");
+      }
+    })
+    .catch((error) => {
+      alert("Error: " + error);
+    });
 }

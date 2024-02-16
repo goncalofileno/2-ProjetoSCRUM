@@ -1,36 +1,27 @@
 package aor.paj.dto;
 
-
-import jakarta.inject.Inject;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
 import java.util.ArrayList;
 
 @XmlRootElement
-public class User {
+public class UserDto {
     private int id;
     private String username;
     private String password;
-    private String oldpassword;
-    private String newpassword;
-    private String confirmnewpassword;
     private String email;
     private String firstname;
     private String lastname;
     private String phone;
     private String photoURL;
-    //@XmlElement
-    //@XmlElementWrapper
-    private ArrayList<Task> tasks;
+    private ArrayList<TaskDto> taskDtos;
 
-
-    public User() {
+    // Constructors
+    public UserDto() {
     }
 
-    // Construtor para adicionar um novo usuário, sem fornecer um ID
-    public User(String username, String password, String email, String firstname, String lastname, String phone, String photoURL) {
+    public UserDto(String username, String password, String email, String firstname, String lastname, String phone, String photoURL) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -40,6 +31,7 @@ public class User {
         this.photoURL = photoURL;
     }
 
+    // Getter methods
     @XmlElement
     public int getId() {
         return id;
@@ -53,21 +45,6 @@ public class User {
     @XmlElement
     public String getPassword() {
         return password;
-    }
-
-    @XmlElement
-    public String getOldpassword() {
-        return oldpassword;
-    }
-
-    @XmlElement
-    public String getNewpassword() {
-        return newpassword;
-    }
-
-    @XmlElement
-    public String getConfirmnewpassword() {
-        return confirmnewpassword;
     }
 
     @XmlElement
@@ -97,11 +74,11 @@ public class User {
 
     @XmlElementWrapper
     @XmlElement(name = "task")
-    public ArrayList<Task> getTasks() {
-        return this.tasks;
+    public ArrayList<TaskDto> getTasks() {
+        return this.taskDtos;
     }
 
-
+    // Setter methods
     public void setId(int id) {
         this.id = id;
     }
@@ -112,18 +89,6 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public void setNewpassword(String newpassword) {
-        this.newpassword = newpassword;
-    }
-
-    public void setConfirmnewpassword(String confirmnewpassword) {
-        this.confirmnewpassword = confirmnewpassword;
-    }
-
-    public void setOldpassword(String oldpassword) {
-        this.oldpassword = oldpassword;
     }
 
     public void setEmail(String email) {
@@ -146,29 +111,30 @@ public class User {
         this.photoURL = photoURL;
     }
 
-    public void setTasks(ArrayList<Task> tasks) {
-        this.tasks = tasks;
+    public void setTasks(ArrayList<TaskDto> taskDtos) {
+        this.taskDtos = taskDtos;
     }
 
-    public void addTask(Task t) {
-        tasks.add(t);
+    // Task-related methods
+    public void addTask(TaskDto t) {
+        taskDtos.add(t);
     }
 
-    public void removeTask(Task t) {
-        tasks.remove(t);
+    public void removeTask(TaskDto t) {
+        taskDtos.remove(t);
     }
 
     public void removeTask(int id) {
-        for (Task t : tasks) {
+        for (TaskDto t : taskDtos) {
             if (t.getId() == id) {
-                tasks.remove(t);
+                taskDtos.remove(t);
                 return;
             }
         }
     }
 
-    public Task getTask(int id) {
-        for (Task t : tasks) {
+    public TaskDto getTask(int id) {
+        for (TaskDto t : taskDtos) {
             if (t.getId() == id) {
                 return t;
             }

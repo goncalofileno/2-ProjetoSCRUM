@@ -1,6 +1,6 @@
 package aor.paj.utils;
 
-import aor.paj.dto.User;
+import aor.paj.dto.UserDto;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbConfig;
@@ -20,27 +20,27 @@ public class JsonUtils {
         return jsonb.toJson(object);
     }
 
-    public static ArrayList<User> getUsers() {
-        ArrayList<User> users;
+    public static ArrayList<UserDto> getUsers() {
+        ArrayList<UserDto> userDtos;
         File f = new File(filename);
         if (f.exists()) {
             try {
                 FileReader filereader = new FileReader(f);
-                users = jsonb.fromJson(filereader, new ArrayList<User>() {
+                userDtos = jsonb.fromJson(filereader, new ArrayList<UserDto>() {
                 }.getClass().getGenericSuperclass());
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            users = new ArrayList<>();
+            userDtos = new ArrayList<>();
         }
-        return users;
+        return userDtos;
     }
 
-    public static void writeIntoJsonFile(List<User> users) {
+    public static void writeIntoJsonFile(List<UserDto> userDtos) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(filename);
-            jsonb.toJson(users, fileOutputStream);
+            jsonb.toJson(userDtos, fileOutputStream);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

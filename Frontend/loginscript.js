@@ -1,4 +1,8 @@
-//Ao clicar no botão de login, o username é armazenado na sessionStorage e o usuário é redirecionado para a página de interface
+window.onload = function () {
+  sessionStorage.clear();
+  localStorage.clear();
+}
+//Ao clicar no botão de login, o username é armazenado na sessionStorage e o usuário é redirecionado para a página de interfacedocument
 document
   .getElementById("loginForm")
   .addEventListener("submit", function (event) {
@@ -8,6 +12,13 @@ document
     let password = document.getElementById("password").value;
 
     loginUser(username, password);
+  });
+
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      var form = document.getElementById('loginForm');
+      form.reset();
+    }
   });
 
 document
@@ -30,13 +41,17 @@ document
         password: password,
       },
       credentials: "include",
-    }).then(async (response) => {
-      if (response.status == 200) {
-        localStorage.setItem("username", username);
-        localStorage.setItem("password", password);
-        window.location.href = "interface.html";
-      } else {
-        alert("Invalid Credentials");
-      }
-    });
+    })
+      .then((response) => response.json()) // parse the response as JSON
+      .then((data) => {
+        console.log(data); // log the data
+        if (data.message === "Valid Login") {
+          localStorage.setItem("username", username);
+          localStorage.setItem("password", password);
+          window.location.href = "interface.html";
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch((error) => console.error("Error:", error));
   }

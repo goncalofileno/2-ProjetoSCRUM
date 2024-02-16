@@ -3,22 +3,16 @@ package aor.paj.service;
 import java.util.List;
 
 import aor.paj.bean.UserBean;
-import aor.paj.dto.User;
+import aor.paj.dto.*;
 import aor.paj.responses.ResponseMessage;
 import aor.paj.utils.JsonUtils;
 import aor.paj.validator.UserValidator;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.Path;
+
+import java.util.stream.Collectors;
 
 @Path("/user")
 public class UserService {
@@ -32,18 +26,44 @@ public class UserService {
     @Path("/all")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<User> getUsers() {
-        return userBean.getUsers();
+    public Response getUsers(@HeaderParam("username") String username, @HeaderParam("password") String password) {
+        if (UserValidator.isValidUser(userBean.getUsers(), username, password)) {
+            List<UserDetailsDto> userDetailsList = userBean.getUsers().stream()
+                    .map(user -> new UserDetailsDto(
+                            user.getUsername(),
+                            user.getFirstname(),
+                            user.getLastname(),
+                            user.getEmail(),
+                            user.getPhotoURL(),
+                            user.getPhone()
+                    ))
+                    .collect(Collectors.toList());
+            return Response.status(200).entity(userDetailsList).build();
+        } else {
+            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+        }
     }
 
-    //Serviço que possivelmente não será utilizado nesta fase 2
-    @DELETE
-    @Path("/delete")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @GET
+    @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeUser(@QueryParam("id") int id) {
-        userBean.removeUser(id);
-        return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("User is deleted"))).build();
+    public Response getUserDetails(@PathParam("username") String username, @HeaderParam("username") String headerUsername, @HeaderParam("password") String headerPassword) {
+        if (UserValidator.isValidUser(userBean.getUsers(), headerUsername, headerPassword) && headerUsername.equals(username)) {
+
+            UserDto userDto = userBean.getUser(username);
+            UserDetailsDto userDetails = new UserDetailsDto(
+                    userDto.getUsername(),
+                    userDto.getFirstname(),
+                    userDto.getLastname(),
+                    userDto.getEmail(),
+                    userDto.getPhotoURL(),
+                    userDto.getPhone()
+            );
+            return Response.status(200).entity(userDetails).build();
+        } else {
+            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+
+        }
     }
 
     //Service that receives a user object and adds it to the list of users
@@ -51,11 +71,9 @@ public class UserService {
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addUser(User u) {
+    public Response addUser(UserDto u) {
         // Check if any parameter is null or blank
-        if (isNullOrBlank(u.getUsername()) || isNullOrBlank(u.getPassword()) || isNullOrBlank(u.getEmail())
-                || isNullOrBlank(u.getFirstname()) || isNullOrBlank(u.getLastname())
-                || isNullOrBlank(u.getPhone()) || isNullOrBlank(u.getPhotoURL())) {
+        if (UserValidator.isNullorBlank(u)) {
             return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("One or more parameters are null or blank"))).build();
         }
 
@@ -109,63 +127,112 @@ public class UserService {
         return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
     }
 
-    // UPDATE FUNCTION
-    @POST
-    @Path("/update")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateUser(@HeaderParam("username") String username, @HeaderParam("password") String password, User u) {
+    @GET
+    @Path("/getDetails")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserDetails(@HeaderParam("username") String username, @HeaderParam("password") String password) {
         if (UserValidator.isValidUser(userBean.getUsers(), username, password)) {
-            if (UserValidator.allFieldsEmpty(u))
-                return Response.status(406).entity("no changes were introduced").build();
-            else {
-                if (UserValidator.passwordIsBeingAltered(u)) { // checks if at least 1 of those 3 pw fields was inputed
-                    if (UserValidator.passwordMismatches(u, userBean.getUser(username))) {
-                        return Response.status(406).entity("password is wrong").build();
-                    }
-                    if (UserValidator.passwordBothNewEmpty(u)) {
-                        return Response.status(406).entity("new and confirmation password are empty").build();
-                    }
-                    if (UserValidator.passwordBothNewMismatches(u)) {
-                        return Response.status(406).entity("new and confirmation password do not match").build();
-                    }
-                    if (UserValidator.passwordOldEqualsNewMismatches(u)) {
-                        return Response.status(406).entity("old and new password are same, unchanged").build();
-                    }
-                }
-                // email verifications
-                if (UserValidator.emailUnchanged(u, userBean.getUser(username))) {
-                    return Response.status(406).entity("email unchanged").build();
-                } else if (UserValidator.emailExists(userBean.getUsers(), u.getEmail())) {
-                    return Response.status(406).entity("email already in use").build();
-                }
-                // first and last name
-                if (UserValidator.firstnameUnchanged(u, userBean.getUser(username))) {
-                    return Response.status(406).entity("first name unchanged").build();
-                }
-                if (UserValidator.lastnameUnchanged(u, userBean.getUser(username))) {
-                    return Response.status(406).entity("last name unchanged").build();
-                }
-                // phone and photoURL --- refazer com iteração generalista pelos fields, e response para cada field
-                if (UserValidator.phoneUnchanged(u, userBean.getUser(username))) {
-                    return Response.status(406).entity("phone unchanged").build();
-                }
-                if (UserValidator.photourlUnchanged(u, userBean.getUser(username))) {
-                    return Response.status(406).entity("photo url unchanged").build();
-                }
-            }
-
+            UserDto userDto = userBean.getUser(username);
+            UserDetailsDto userDetails = new UserDetailsDto(
+                    userDto.getUsername(),
+                    userDto.getFirstname(),
+                    userDto.getLastname(),
+                    userDto.getEmail(),
+                    userDto.getPhotoURL(),
+                    userDto.getPhone()
+            );
+            return Response.status(200).entity(userDetails).build();
+        } else {
+            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
         }
-
-        userBean.updateUser(u);
-        return Response.status(200).entity("the user was edited successfully").build();
     }
 
+    @GET
+    @Path("/getPartial")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserPartial(@HeaderParam("username") String username, @HeaderParam("password") String password) {
+        if (UserValidator.isValidUser(userBean.getUsers(), username, password)) {
+            UserDto userDto = userBean.getUser(username);
+            UserPartialDto userPartialDTO = userBean.mapUserToUserPartialDTO(userDto);
+            return Response.status(200).entity(userPartialDTO).build();
+        } else {
+            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+        }
+    }
 
-    // Helper method to check if a string is null or blank
-    private boolean isNullOrBlank(String s) {
-        return s == null || s.trim().isEmpty();
+    //Service that receives a UserUpdateDto object, authenticates the user, sees if the user that is logged is the same as the one that is being updated and updates the user
+    @PUT
+    @Path("/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUser(UserUpdateDto u, @HeaderParam("username") String username, @HeaderParam("password") String password) {
+        if (!UserValidator.isNullorBlank(u)) {
+            if (UserValidator.isValidUser(userBean.getUsers(), username, password)) {
+                if (u.getUsername().equals(username)) {
+                    if (!UserValidator.isValidEmail(u.getEmail())) {
+                        System.out.println("Invalid email format");
+                        return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid email format"))).build();
+                    }
+                    if (!UserValidator.isValidPhoneNumber(u.getPhone())) {
+                        System.out.println("Invalid phone number format");
+                        return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid phone number format"))).build();
+                    }
+                    if (!UserValidator.isValidURL(u.getPhotoURL())) {
+                        System.out.println("Invalid URL format");
+                        return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid URL format"))).build();
+                    }
+                    if (!UserValidator.emailExists(userBean.getUsers(), u.getEmail()) || userBean.getUser(username).getEmail().equals(u.getEmail())) {
+                        userBean.updateUser(u);
+                        System.out.println("User is updated");
+                        return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("User is updated"))).build();
+                    }
+                }
+            }
+            System.out.println("Email already exists");
+            return Response.status(409).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Email already exists"))).build();
+        }
+        System.out.println("One or more parameters are null or blank");
+        return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("One or more parameters are null or blank"))).build();
+    }
+
+    //Services tha receives a UserPasswordDto object, authenticates the user, sees if the user that is logged is the same as the one that is being updated and updates the user password
+    @PUT
+    @Path("/updatePassword")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updatePassword(UserPasswordUpdateDto u, @HeaderParam("username") String username, @HeaderParam("password") String password) {
+        if (!UserValidator.isNullorBlank(u)) {
+            if (UserValidator.isValidUser(userBean.getUsers(), username, password)) {
+                if (!userBean.getUser(username).getPassword().equals(password)) {
+                    return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+                }
+                if(!u.getOldPassword().equals(userBean.getUser(username).getPassword())) {
+                    return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Old password is incorrect"))).build();
+                }
+                if (u.getNewPassword().equals(u.getOldPassword())) {
+                    return Response.status(400).entity(JsonUtils.convertObjectToJson(new ResponseMessage("New password is the same as the old password"))).build();
+                }
+                userBean.updatePassword(u, username);
+                return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Password is updated")).toString()).build();
+            }
+            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized"))).build();
+        }
+        return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Invalid Parameters"))).build();
+    }
+
+    //Service that when logout its pressed, the file its updated
+    @POST
+    @Path("/logout")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response logout(@HeaderParam("username") String username, @HeaderParam("password") String password) {
+        if (UserValidator.isValidUser(userBean.getUsers(), username, password)) {
+            JsonUtils.writeIntoJsonFile(userBean.getUsers());
+            return Response.status(200).entity(JsonUtils.convertObjectToJson(new ResponseMessage("User is logged out")).toString()).build();
+        }
+        return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage("Unauthorized")).toString()).build();
     }
 
 }
+
 
 
